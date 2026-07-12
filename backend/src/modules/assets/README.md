@@ -31,3 +31,8 @@ Auth: Bearer JWT **or** parallel-dev headers `x-user-id` + `x-user-role`.
 
 ## Jobs
 Server also runs `flagOverdueAllocations` every 60s (same cadence as booking jobs).
+
+## Frontend
+- `/assets` — registry list, filters, history expand
+- `/assets/new` — register form (category custom fields)
+- `/allocations` — allocate / return / transfer / overdue flag
