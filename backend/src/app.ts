@@ -4,6 +4,9 @@ import express from "express";
 import { prisma } from "./prismaClient.js";
 import { errorHandler } from "./shared/errors.js";
 
+// Track A
+import { authRoutes } from "./modules/auth/auth.routes.js";
+
 // Track B
 import { assetsRouter } from "./modules/assets/assets.routes.js";
 
@@ -22,7 +25,6 @@ import { logsRouter } from "./modules/insights/logs.routes.js";
 
 /**
  * Express app factory (used by tests + index.ts).
- * Track A owns long-term bootstrap; C mounts bookings/maintenance here.
  */
 export function createApp() {
   const app = express();
@@ -35,26 +37,35 @@ export function createApp() {
 
   app.use(express.json());
 
+  // Request logger
   app.use((req, _res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
   });
 
-  // Track A Routes (pending)
-  // app.use("/api/v1/auth", authRoutes);
+  // ----------------------
+  // Track A Routes
+  // ----------------------
+  app.use("/api/v1/auth", authRoutes);
   // app.use("/api/v1/departments", departmentRoutes);
   // app.use("/api/v1/categories", categoryRoutes);
   // app.use("/api/v1/users", userRoutes);
 
-  // Track B
+  // ----------------------
+  // Track B Routes
+  // ----------------------
   app.use("/api/v1/assets", assetsRouter);
 
-  // Track C
+  // ----------------------
+  // Track C Routes
+  // ----------------------
   app.use("/api/v1/operations", operationsRouter);
   app.use("/api/v1/bookings", bookingRouter);
   app.use("/api/v1/maintenance-requests", maintRouter);
 
-  // Track D
+  // ----------------------
+  // Track D Routes
+  // ----------------------
   app.use("/api/v1/insights", insightsRouter);
   app.use("/api/v1/dashboard", dashboardRouter);
   app.use("/api/v1/audit-cycles", auditRouter);
@@ -62,15 +73,24 @@ export function createApp() {
   app.use("/api/v1/notifications", notifRouter);
   app.use("/api/v1/activity-logs", logsRouter);
 
+  // Health check
   app.get("/api/v1/health", async (_req, res) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
-      res.status(200).json({ status: "ok", db: true });
+
+      res.status(200).json({
+        status: "ok",
+        db: true,
+      });
     } catch {
-      res.status(500).json({ status: "error", db: false });
+      res.status(500).json({
+        status: "error",
+        db: false,
+      });
     }
   });
 
+  // Global error handler (must be last)
   app.use(errorHandler);
 
   return app;
