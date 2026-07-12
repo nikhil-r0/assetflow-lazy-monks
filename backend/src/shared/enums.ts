@@ -42,3 +42,55 @@ export enum TransferStatus {
   rejected = "rejected",
   completed = "completed",
 }
+
+export enum UserStatus {
+  active = "active",
+  inactive = "inactive",
+}
+
+export enum DeptStatus {
+  active = "active",
+  inactive = "inactive",
+}
+
+export enum FieldType {
+  text = "text",
+  number = "number",
+  date = "date",
+  boolean = "boolean",
+}
+
+export enum BookingStatus {
+  upcoming = "upcoming",
+  ongoing = "ongoing",
+  completed = "completed",
+  cancelled = "cancelled",
+}
+
+export enum Priority {
+  low = "low",
+  medium = "medium",
+  high = "high",
+  critical = "critical",
+}
+
+export enum MaintStatus {
+  pending = "pending",
+  approved = "approved",
+  rejected = "rejected",
+  technician_assigned = "technician_assigned",
+  in_progress = "in_progress",
+  resolved = "resolved",
+}
+
+export enum AuditStatus {
+  open = "open",
+  closed = "closed",
+}
+
+export enum AuditResult {
+  verified = "verified",
+  missing = "missing",
+  damaged = "damaged",
+}
+
