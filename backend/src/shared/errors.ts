@@ -17,3 +17,10 @@ export class NotImplementedError extends AppError {
     super("NOT_IMPLEMENTED", 501, `${method} is not implemented yet`);
   }
 }
+
+export class NotFoundError extends AppError {
+  constructor(message = "Not found") {
+    super("NOT_FOUND", 404, message);
+  }
+}
+
