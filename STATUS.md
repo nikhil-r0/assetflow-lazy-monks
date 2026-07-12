@@ -10,24 +10,23 @@
 
 | Item | Where | Who |
 |---|---|---|
-| Monorepo (`backend/` + `frontend/`) + `docker-compose` | `develop` | A / shared |
-| Full Prisma schema (all 16 tables, track banners) | `backend/prisma/schema.prisma` | A |
-| Track B Phase 0 scaffold | `feature/assets-allocation` | B |
-| Pure asset state machine + 409 conflict shape + tests | `backend/src/modules/assets/` | B |
-| Product docs aligned (canon) | `ASSETFLOW.md`, plan, local `BUILD_SPEC.md` | — |
+| Monorepo + Prisma schema | `develop` | A / shared |
+| Track B Phase 0 scaffold | `develop` (PR #2) | B |
+| Tag gen + custom-field validators + FE shells | `feature/assets-phase1-prep` | B |
+| Pure state machine + 409 conflict shape | `backend/src/modules/assets/` | B |
 
 ## What’s NOT done (blockers)
 
 | Missing | Blocks | Owner |
 |---|---|---|
-| Express bootstrap polish, migrations applied, `/health` with DB | Everyone’s local loop | A |
-| Auth: signup/login/JWT + `requireAuth` / `requireRole` | All protected routes (B/C/D) | A |
-| Org Setup APIs + categories/custom fields | B asset registration | A |
-| Employee directory + role promote | Realistic RBAC demo | A |
-| `createNotification` / `logActivity` helpers | B/C notification calls | D |
-| DB-backed `assetService.transitionStatus` | C maint flips, D audit→Lost | B (Phase 2) |
-| Booking / maintenance modules | Screens 6–7 | C |
-| Dashboard / audit / reports UI | Screens 2, 8–10 | D |
+| Prisma 7 datasource fix + `prisma generate` + migrations | Real DB writes | A |
+| Auth: signup/login/JWT + `requireAuth` / `requireRole` | Protected B/C/D routes | A |
+| Categories + custom field APIs | B asset registration | A |
+| Employee directory + promote | RBAC demo | A |
+| `createNotification` / `logActivity` | B/C notify calls | D |
+| DB-backed `transitionStatus` | C maint / D audit Lost | B (after Prisma) |
+| Booking / maintenance | Screens 6–7 | C |
+| Dashboard / audit / reports | Screens 2, 8–10 | D |
 
 ---
 

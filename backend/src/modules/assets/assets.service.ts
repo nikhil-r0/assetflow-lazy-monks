@@ -4,16 +4,20 @@ import {
   canTransition,
   transitionStatusPure,
 } from "./assetStatus.js";
+import { formatAssetTag, placeholderAssetTag } from "./assetTag.js";
+import { validateCustomFields } from "./customFields.js";
 import { buildAlreadyAllocatedConflict } from "./conflict.js";
 import type { AssetStatus } from "../../shared/enums.js";
 
 /**
- * Track B AssetService skeleton (BUILD_SPEC Phase 0).
- * Real DB wiring lands in later phases; transition helpers are ready for C/D.
+ * Track B AssetService — Phase 0/1-prep helpers ready; CRUD waits on A auth + Prisma generate.
  */
 export const assetService = {
   canTransition,
   transitionStatusPure,
+  formatAssetTag,
+  placeholderAssetTag,
+  validateCustomFields,
   buildAlreadyAllocatedConflict,
 
   async create(_input: CreateAssetInput): Promise<never> {
@@ -32,6 +36,10 @@ export const assetService = {
     throw new NotImplementedError("assetService.update");
   },
 
+  /**
+   * DB wrapper — implement after `prisma generate`. Callers (C/D) should depend on this signature.
+   * Until then use `transitionStatusPure` in unit tests.
+   */
   async transitionStatus(
     _assetId: number,
     _to: AssetStatus,
@@ -39,7 +47,7 @@ export const assetService = {
     _reason?: string,
   ): Promise<never> {
     throw new NotImplementedError(
-      "assetService.transitionStatus (DB wrapper — use transitionStatusPure until Prisma client is wired)",
+      "assetService.transitionStatus (awaiting Prisma client generate + migrations)",
     );
   },
 

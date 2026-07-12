@@ -42,3 +42,10 @@ export enum TransferStatus {
   rejected = "rejected",
   completed = "completed",
 }
+
+export enum FieldType {
+  text = "text",
+  number = "number",
+  date = "date",
+  boolean = "boolean",
+}
