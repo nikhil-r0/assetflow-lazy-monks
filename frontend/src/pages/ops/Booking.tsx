@@ -31,7 +31,7 @@ export function BookingPage() {
         response?: { status?: number; data?: { error?: { code?: string; message?: string } } };
       };
       const code = ax.response?.data?.error?.code;
-      if (code === "OVERLAP" || ax.response?.status === 422) {
+      if (code === "OVERLAP") {
         setState("overlap");
         setMessage(
           ax.response?.data?.error?.message ??
