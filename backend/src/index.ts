@@ -1,5 +1,6 @@
 import { createApp } from "./app.js";
 import { bookingService } from "./modules/operations/booking.service.js";
+import { flagOverdueAllocations } from "./modules/assets/overdue.js";
 
 const port = Number(process.env.PORT ?? 4000);
 const app = createApp();
@@ -22,7 +23,18 @@ async function runBookingJobs() {
   }
 }
 
+/** Track B Phase 5 — mark past-due active allocations as overdue (idempotent). */
+async function runOverdueJob() {
+  try {
+    await flagOverdueAllocations(null);
+  } catch (err) {
+    console.error("allocations flag-overdue failed", err);
+  }
+}
+
 void runBookingJobs();
+void runOverdueJob();
 setInterval(() => {
   void runBookingJobs();
+  void runOverdueJob();
 }, 60_000);

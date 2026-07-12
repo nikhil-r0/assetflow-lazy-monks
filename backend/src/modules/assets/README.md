@@ -15,6 +15,7 @@
 | GET | `/api/v1/assets/:id/history` | auth |
 | POST | `/api/v1/assets/:id/documents` | admin, asset_manager |
 | POST | `/api/v1/allocations` | admin, asset_manager |
+| POST | `/api/v1/allocations/flag-overdue` | admin, asset_manager |
 | POST | `/api/v1/allocations/:id/return` | admin, asset_manager |
 | POST | `/api/v1/transfer-requests` | auth |
 | GET | `/api/v1/transfer-requests` | auth (scoped) |
@@ -26,7 +27,7 @@ Auth: Bearer JWT **or** parallel-dev headers `x-user-id` + `x-user-role`.
 ## Hard rules
 - Double allocation → **409 CONFLICT** with `holder_name` (Transfer CTA).
 - Approve transfer atomically closes old allocation + opens new (one active invariant).
+- Due today is **not** overdue; only strictly past `expected_return_date` (UTC date).
 
-## Still TODO
-- Overdue DB flagger endpoint (pure helper done)
-- Richer Registry FE wiring
+## Jobs
+Server also runs `flagOverdueAllocations` every 60s (same cadence as booking jobs).
