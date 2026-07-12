@@ -29,9 +29,15 @@ import { logsRouter } from "./modules/insights/logs.routes.js";
 export function createApp() {
   const app = express();
 
+  const corsOrigin = process.env.CORS_ORIGIN || "*";
+  const allowedOrigins =
+    corsOrigin === "*"
+      ? true
+      : corsOrigin.split(",").map((o) => o.trim()).filter(Boolean);
+
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN || "*",
+      origin: allowedOrigins,
     }),
   );
 
