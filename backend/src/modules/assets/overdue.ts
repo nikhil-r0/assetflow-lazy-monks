@@ -37,7 +37,8 @@ export type FlagOverdueResult = {
 
 /**
  * Idempotent: only `active` rows with expected_return_date before today UTC
- * become `overdue`. Notifies holders; logs one batch activity.
+ * become `overdue`. Per-row CAS (`updateMany` with status=active) so concurrent
+ * jobs / returns never double-notify; `flagged` counts actual flips only.
  */
 export async function flagOverdueAllocations(
   actorId: number | null = null,
@@ -53,7 +54,6 @@ export async function flagOverdueAllocations(
     include: { asset: true, employee: true },
   });
 
-  // Defense in depth — same date-only rule as the pure helper
   const due = candidates.filter((row) =>
     isOverdueReturn(row.expected_return_date, today),
   );
@@ -62,17 +62,17 @@ export async function flagOverdueAllocations(
     return { flagged: 0, allocation_ids: [] };
   }
 
-  const allocation_ids = due.map((row) => row.id);
-
-  await prisma.allocations.updateMany({
-    where: {
-      id: { in: allocation_ids },
-      status: AllocStatus.active,
-    },
-    data: { status: AllocStatus.overdue },
-  });
+  const flippedIds: number[] = [];
 
   for (const row of due) {
+    const result = await prisma.allocations.updateMany({
+      where: { id: row.id, status: AllocStatus.active },
+      data: { status: AllocStatus.overdue },
+    });
+    if (result.count === 0) continue;
+
+    flippedIds.push(row.id);
+
     if (row.employee_id) {
       const tag = row.asset?.asset_tag ?? `#${row.asset_id}`;
       await createNotification(
@@ -85,10 +85,12 @@ export async function flagOverdueAllocations(
     }
   }
 
-  await logActivity(actorId, ACT.FLAG_OVERDUE, "allocation", undefined, {
-    flagged: allocation_ids.length,
-    allocation_ids,
-  });
+  if (flippedIds.length > 0) {
+    await logActivity(actorId, ACT.FLAG_OVERDUE, "allocation", undefined, {
+      flagged: flippedIds.length,
+      allocation_ids: flippedIds,
+    });
+  }
 
-  return { flagged: allocation_ids.length, allocation_ids };
+  return { flagged: flippedIds.length, allocation_ids: flippedIds };
 }

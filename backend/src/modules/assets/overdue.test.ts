@@ -72,8 +72,9 @@ describe("overdue return flagging", () => {
     const result = await flagOverdueAllocations(99, today);
 
     expect(result).toEqual({ flagged: 1, allocation_ids: [10] });
+    expect(prisma.allocations.updateMany).toHaveBeenCalledTimes(1);
     expect(prisma.allocations.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: [10] }, status: AllocStatus.active },
+      where: { id: 10, status: AllocStatus.active },
       data: { status: AllocStatus.overdue },
     });
     expect(createNotification).toHaveBeenCalledTimes(1);
@@ -91,6 +92,28 @@ describe("overdue return flagging", () => {
       undefined,
       { flagged: 1, allocation_ids: [10] },
     );
+  });
+
+  it("test_flag_overdue_is_idempotent_no_duplicate_notifications", async () => {
+    vi.mocked(prisma.allocations.findMany).mockResolvedValue([
+      {
+        id: 10,
+        asset_id: 1,
+        employee_id: 5,
+        status: AllocStatus.active,
+        expected_return_date: new Date("2026-07-10T00:00:00.000Z"),
+        asset: { asset_tag: "AF-0001" },
+        employee: { id: 5, name: "Priya" },
+      },
+    ] as never);
+    // Concurrent loser / already flipped — CAS misses
+    vi.mocked(prisma.allocations.updateMany).mockResolvedValue({ count: 0 } as never);
+
+    const result = await flagOverdueAllocations(1, today);
+
+    expect(result).toEqual({ flagged: 0, allocation_ids: [] });
+    expect(createNotification).not.toHaveBeenCalled();
+    expect(logActivity).not.toHaveBeenCalled();
   });
 
   it("flagOverdueAllocations is idempotent when nothing is due", async () => {
