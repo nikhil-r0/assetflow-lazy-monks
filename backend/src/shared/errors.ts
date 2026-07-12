@@ -1,26 +1,46 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from "express";
+
+/** Shared application errors. */
 
 export class AppError extends Error {
-  public code: string;
-  public httpStatus: number;
-  public details?: any[];
-
-  constructor(code: string, httpStatus: number, message: string, details?: any[]) {
+  constructor(
+    public readonly code: string,
+    public readonly httpStatus: number,
+    message: string,
+    public readonly details?: Array<Record<string, unknown>>,
+  ) {
     super(message);
-    this.code = code;
-    this.httpStatus = httpStatus;
-    this.details = details;
-    Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-    Error.captureStackTrace(this);
+    this.name = "AppError";
+
+    // Restore prototype chain
+    Object.setPrototypeOf(this, new.target.prototype);
+
+    Error.captureStackTrace?.(this);
   }
 }
 
-export const errorHandler = (
-  err: any,
-  req: Request,
+export class NotImplementedError extends AppError {
+  constructor(method: string) {
+    super("NOT_IMPLEMENTED", 501, `${method} is not implemented yet`);
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(message = "Not found") {
+    super("NOT_FOUND", 404, message);
+  }
+}
+
+/**
+ * Global Express error handler.
+ * Must be registered last in app.ts.
+ */
+export function errorHandler(
+  err: unknown,
+  _req: Request,
   res: Response,
-  next: NextFunction
-) => {
+  _next: NextFunction,
+): Response {
   if (err instanceof AppError) {
     return res.status(err.httpStatus).json({
       error: {
@@ -31,12 +51,12 @@ export const errorHandler = (
     });
   }
 
-  // Handle generic errors
-  console.error('Unhandled Error:', err);
+  console.error("Unhandled Error:", err);
+
   return res.status(500).json({
     error: {
-      code: 'INTERNAL',
-      message: 'An unexpected internal error occurred.',
+      code: "INTERNAL",
+      message: "An unexpected internal error occurred.",
     },
   });
-};
+}

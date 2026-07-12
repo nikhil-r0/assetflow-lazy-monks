@@ -1,8 +1,8 @@
-import 'dotenv/config';
-import { app } from './app.js';
+import { createApp } from "./app.js";
 
-const PORT = process.env.PORT || 4000;
+const port = Number(process.env.PORT ?? 4000);
+const app = createApp();
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`AssetFlow API listening on http://localhost:${port}`);
 });
