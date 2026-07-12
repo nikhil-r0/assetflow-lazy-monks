@@ -1,2 +1,7 @@
 # ER Diagram (DBML)
-// To be populated once the initial Prisma schema is mapped here
+
+Source of truth for columns: `backend/prisma/schema.prisma` (and local `BUILD_SPEC.md` §0.2).
+
+This file should be generated/filled by Track A to match Prisma. Until then, open `schema.prisma` — it already contains all 16 models with Track A/B/C/D banners.
+
+Tables: users, departments, asset_categories, category_custom_fields, assets, asset_documents, allocations, transfer_requests, bookings, maintenance_requests, audit_cycles, audit_cycle_auditors, audit_items, notifications, activity_logs.
