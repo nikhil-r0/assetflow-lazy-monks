@@ -72,6 +72,25 @@ export function AllocationPage() {
     }
   }
 
+  async function flagOverdue() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await apiClient.post("/allocations/flag-overdue");
+      const flagged = res.data?.flagged ?? 0;
+      setMessage(
+        flagged === 0
+          ? "No past-due allocations to flag."
+          : `Flagged ${flagged} allocation(s) as overdue.`,
+      );
+    } catch (err: unknown) {
+      const ax = err as { response?: { data?: { error?: { message?: string } } } };
+      setMessage(ax.response?.data?.error?.message ?? "Flag overdue failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main style={{ padding: "1.5rem", fontFamily: "system-ui, sans-serif" }}>
       <h1>Allocation & Transfer</h1>
@@ -79,6 +98,17 @@ export function AllocationPage() {
         After a double-allocation <strong>409</strong>, request a transfer here. Managers
         approve to re-allocate atomically.
       </p>
+
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2>Overdue flagging</h2>
+        <p style={{ color: "#666", maxWidth: 480 }}>
+          Marks active allocations with an expected return date strictly before today as
+          overdue (admin / asset manager). Also runs automatically every minute on the API.
+        </p>
+        <button type="button" disabled={busy} onClick={() => void flagOverdue()}>
+          Flag overdue now
+        </button>
+      </section>
 
       <section style={{ marginTop: "1.5rem", maxWidth: 420 }}>
         <h2>Request transfer</h2>

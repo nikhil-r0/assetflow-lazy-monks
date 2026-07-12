@@ -17,6 +17,7 @@ Auth: `Authorization: Bearer <jwt>` **or** headers `x-user-id` + `x-user-role` (
 | GET | `/assets/:id/history` | auth |
 | POST | `/assets/:id/documents` | admin, asset_manager |
 | POST | `/allocations` | admin, asset_manager |
+| POST | `/allocations/flag-overdue` | admin, asset_manager |
 | POST | `/allocations/:id/return` | admin, asset_manager |
 | POST | `/transfer-requests` | auth |
 | GET | `/transfer-requests` | auth |
@@ -24,13 +25,11 @@ Auth: `Authorization: Bearer <jwt>` **or** headers `x-user-id` + `x-user-role` (
 | POST | `/transfer-requests/:id/reject` | admin, asset_manager, department_head |
 
 Double-allocation → **409** with `holder_name` in details.  
-Transfer approve → atomic re-allocation (`requested` → `completed`).
+Transfer approve → atomic re-allocation (`requested` → `completed`).  
+Flag-overdue → `active` past due → `overdue` (idempotent; due today stays active).
 
 ## Also live
 - A: `/auth/*` (+ org/categories/users when mounted)
 - C: `/bookings`, `/maintenance-requests`, `/operations/ping`
 - D: `/notifications`, `/activity-logs`, insights pings
 - `/health` — `db: true` when Postgres reachable (port **5434**)
-
-## Still planned
-- B: overdue flag endpoint

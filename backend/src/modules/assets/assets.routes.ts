@@ -12,6 +12,7 @@ import {
   transitionStatusSchema,
   updateAssetSchema,
 } from "./assets.schema.js";
+import { flagOverdueAllocations } from "./overdue.js";
 
 export const assetsRouter = Router();
 export const allocationsRouter = Router();
@@ -183,6 +184,21 @@ allocationsRouter.post(
         department_id: req.user!.department_id,
       });
       res.status(201).json(allocation);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+/** Phase 5 — must be registered before `/:id/return`. */
+allocationsRouter.post(
+  "/flag-overdue",
+  requireAuth,
+  requireRole(Role.admin, Role.asset_manager),
+  async (req, res, next) => {
+    try {
+      const result = await flagOverdueAllocations(req.user!.id);
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
