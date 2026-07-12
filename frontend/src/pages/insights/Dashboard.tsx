@@ -59,37 +59,37 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 sm:p-8 space-y-8">
+    <div className="min-h-screen bg-slate-50/50 p-6 sm:p-8 space-y-8 animate-fade-in">
       {/* Welcome header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-2">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight m-0">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight m-0">
             Insights Dashboard
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1.5 font-medium">
             Real-time status overview of assets, bookings, and operations.
           </p>
         </div>
         
         {/* Quick action buttons */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           <a
             href="/assets"
-            className="inline-flex items-center px-4 py-2 border border-gray-200 rounded-xl bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-2xs transition-all cursor-pointer"
+            className="premium-btn-secondary py-2"
           >
-            <PlusCircle className="mr-2 h-4 w-4 text-gray-500" />
+            <PlusCircle className="mr-2 h-4 w-4 text-slate-500" />
             Register Asset
           </a>
           <a
             href="/bookings"
-            className="inline-flex items-center px-4 py-2 border border-gray-200 rounded-xl bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-2xs transition-all cursor-pointer"
+            className="premium-btn-secondary py-2"
           >
-            <Calendar className="mr-2 h-4 w-4 text-gray-500" />
+            <Calendar className="mr-2 h-4 w-4 text-slate-500" />
             Book Resource
           </a>
           <a
             href="/maintenance"
-            className="inline-flex items-center px-4 py-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 shadow-xs transition-all cursor-pointer"
+            className="premium-btn-primary py-2"
           >
             <Wrench className="mr-2 h-4 w-4" />
             Raise Maintenance
@@ -166,22 +166,22 @@ export default function Dashboard() {
           {/* Return alerts split panel */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Overdue Returns List */}
-            <div className="bg-white p-6 rounded-2xl border border-red-100 shadow-sm flex flex-col h-[400px]">
-              <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-red-50 text-red-600 rounded-lg">
-                    <AlertTriangle className="h-5 w-5" />
+            <div className="premium-card p-6 flex flex-col h-[400px] hover:border-red-200">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-red-50 text-red-600 rounded-xl shadow-2xs">
+                    <AlertTriangle className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900 m-0">
+                    <h2 className="text-lg font-extrabold text-slate-900 m-0">
                       Overdue Returns
                     </h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-slate-400 mt-0.5 font-medium">
                       Urgent action required
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                <span className="px-2.5 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px] font-bold font-mono border border-red-100">
                   {overdue?.length ?? 0} items
                 </span>
               </div>
@@ -191,59 +191,61 @@ export default function Dashboard() {
                   overdue.map((item) => (
                     <div
                       key={item.id}
-                      className="p-4 border border-red-50 hover:bg-red-50/20 rounded-xl transition-all flex justify-between items-start gap-4"
+                      className="p-4 border border-slate-100 hover:border-red-100 hover:bg-red-50/10 rounded-xl transition-all duration-200 flex justify-between items-start gap-4"
                     >
                       <div>
-                        <h4 className="text-sm font-bold text-gray-900">
+                        <h4 className="text-sm font-bold text-slate-900">
                           {item.asset.name}
                         </h4>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          Tag: {item.asset.asset_tag}
+                        <p className="text-xs text-slate-400 mt-1 font-mono">
+                          Tag: <span className="font-bold text-purple-600">{item.asset.asset_tag}</span>
                         </p>
-                        <p className="text-xs text-gray-600 mt-2">
+                        <p className="text-xs text-slate-500 mt-2 font-medium">
                           Holder:{" "}
-                          {item.employee
-                            ? `${item.employee.name} (${item.employee.email})`
-                            : item.department?.name ?? "N/A"}
+                          <span className="text-slate-800 font-semibold">
+                            {item.employee
+                              ? `${item.employee.name} (${item.employee.email})`
+                              : item.department?.name ?? "N/A"}
+                          </span>
                         </p>
                       </div>
-                      <div className="text-right">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
-                          {item.days_overdue} days overdue
+                      <div className="text-right shrink-0">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
+                          {item.days_overdue}d overdue
                         </span>
-                        <p className="text-[10px] text-gray-400 mt-2">
+                        <p className="text-[10px] text-slate-400 mt-2 font-mono">
                           Due: {item.expected_return_date ? new Date(item.expected_return_date).toLocaleDateString() : "-"}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="h-full flex flex-col justify-center items-center text-gray-500">
+                  <div className="h-full flex flex-col justify-center items-center text-slate-400">
                     <CheckCircle className="h-8 w-8 text-emerald-500 mb-2" />
-                    <p className="text-sm font-semibold text-gray-700">All caught up</p>
-                    <p className="text-xs text-gray-400">No overdue returns at this time.</p>
+                    <p className="text-sm font-bold text-slate-700">All caught up</p>
+                    <p className="text-xs text-slate-400 mt-0.5">No overdue returns at this time.</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Upcoming Returns List */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col h-[400px]">
-              <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                    <Clock className="h-5 w-5" />
+            <div className="premium-card p-6 flex flex-col h-[400px]">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl shadow-2xs">
+                    <Clock className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900 m-0">
+                    <h2 className="text-lg font-extrabold text-slate-900 m-0">
                       Upcoming Returns
                     </h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-slate-400 mt-0.5 font-medium">
                       Expected in the next 7 days
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+                <span className="px-2.5 py-0.5 bg-purple-50 text-purple-600 rounded-full text-[10px] font-bold font-mono border border-purple-100">
                   {upcoming?.length ?? 0} items
                 </span>
               </div>
@@ -253,37 +255,39 @@ export default function Dashboard() {
                   upcoming.map((item) => (
                     <div
                       key={item.id}
-                      className="p-4 border border-gray-50 hover:bg-purple-50/10 rounded-xl transition-all flex justify-between items-start gap-4"
+                      className="p-4 border border-slate-100 hover:border-purple-100 hover:bg-purple-50/10 rounded-xl transition-all duration-200 flex justify-between items-start gap-4"
                     >
                       <div>
-                        <h4 className="text-sm font-bold text-gray-900">
+                        <h4 className="text-sm font-bold text-slate-900">
                           {item.asset.name}
                         </h4>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          Tag: {item.asset.asset_tag}
+                        <p className="text-xs text-slate-400 mt-1 font-mono">
+                          Tag: <span className="font-bold text-purple-600">{item.asset.asset_tag}</span>
                         </p>
-                        <p className="text-xs text-gray-600 mt-2">
+                        <p className="text-xs text-slate-500 mt-2 font-medium">
                           Holder:{" "}
-                          {item.employee
-                            ? `${item.employee.name} (${item.employee.email})`
-                            : item.department?.name ?? "N/A"}
+                          <span className="text-slate-800 font-semibold">
+                            {item.employee
+                              ? `${item.employee.name} (${item.employee.email})`
+                              : item.department?.name ?? "N/A"}
+                          </span>
                         </p>
                       </div>
-                      <div className="text-right">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">
+                      <div className="text-right shrink-0">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-100">
                           Due: {item.expected_return_date ? new Date(item.expected_return_date).toLocaleDateString() : "-"}
                         </span>
-                        <p className="text-[10px] text-gray-400 mt-2">
-                          Allocated: {new Date(item.allocated_date).toLocaleDateString()}
+                        <p className="text-[10px] text-slate-400 mt-2 font-mono">
+                          Alloc: {new Date(item.allocated_date).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="h-full flex flex-col justify-center items-center text-gray-500">
-                    <Clock className="h-8 w-8 text-gray-300 mb-2" />
-                    <p className="text-sm font-semibold text-gray-700">No upcoming returns</p>
-                    <p className="text-xs text-gray-400">No asset returns scheduled for next 7 days.</p>
+                  <div className="h-full flex flex-col justify-center items-center text-slate-400">
+                    <Clock className="h-8 w-8 text-slate-300 mb-2" />
+                    <p className="text-sm font-bold text-slate-700">No upcoming returns</p>
+                    <p className="text-xs text-slate-400 mt-0.5">No asset returns scheduled for next 7 days.</p>
                   </div>
                 )}
               </div>

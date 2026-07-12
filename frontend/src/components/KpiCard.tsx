@@ -18,19 +18,19 @@ export function KpiCard({
   description,
 }: KpiCardProps) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-all duration-200 flex items-start gap-4">
-      <div className={`p-3 rounded-xl ${bgClass} ${colorClass}`}>
-        <Icon className="h-6 w-6" />
+    <div className="premium-card p-6 flex items-start gap-4">
+      <div className={`p-3.5 rounded-2xl transition-transform duration-300 hover:scale-105 ${bgClass} ${colorClass} shadow-2xs`}>
+        <Icon className="h-5 w-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 truncate">
+        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 truncate">
           {title}
         </p>
-        <h3 className="text-2xl font-bold text-gray-900 leading-none">
+        <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight font-display leading-none">
           {value}
         </h3>
         {description && (
-          <p className="text-xs text-gray-500 mt-2 truncate">{description}</p>
+          <p className="text-xs text-slate-400 mt-2 font-medium truncate">{description}</p>
         )}
       </div>
     </div>
