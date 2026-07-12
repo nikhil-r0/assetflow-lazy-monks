@@ -87,13 +87,18 @@ export function MaintenancePage() {
     setMessage("");
     try {
       if (action === "assign") {
-        if (!technician.trim()) {
+        const name =
+          technician.trim() ||
+          window.prompt("Technician name for this request?")?.trim() ||
+          "";
+        if (!name) {
           setMessageTone("err");
-          setMessage("Enter a technician name before assigning.");
+          setMessage("Assign needs a technician name.");
           return;
         }
+        setTechnician(name);
         await apiClient.post(`/maintenance-requests/${id}/assign`, {
-          technician_name: technician.trim(),
+          technician_name: name,
         });
       } else if (action === "reject") {
         await apiClient.post(`/maintenance-requests/${id}/reject`, {});
@@ -214,8 +219,17 @@ export function MaintenancePage() {
                 {r.technician_name && (
                   <p className="mt-1 text-xs text-gray-500">Tech: {r.technician_name}</p>
                 )}
-                {isManager && (
-                  <div className="mt-2 flex flex-wrap gap-2">
+                {isManager && (MANAGER_ACTIONS[r.status] ?? []).length > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {(MANAGER_ACTIONS[r.status] ?? []).includes("assign") && (
+                      <input
+                        className="rounded border px-2 py-1 text-xs"
+                        value={technician}
+                        onChange={(e) => setTechnician(e.target.value)}
+                        placeholder="Technician name"
+                        aria-label="Technician name for assign"
+                      />
+                    )}
                     {(MANAGER_ACTIONS[r.status] ?? []).map((action) => (
                       <button
                         key={action}
