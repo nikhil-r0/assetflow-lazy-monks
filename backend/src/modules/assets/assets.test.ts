@@ -9,12 +9,58 @@ import {
 import { AssetStatus } from "../../shared/enums.js";
 import { buildAlreadyAllocatedConflict } from "./conflict.js";
 
+const managerHeaders = {
+  "x-user-id": "1",
+  "x-user-role": "asset_manager",
+};
+
+const employeeHeaders = {
+  "x-user-id": "2",
+  "x-user-role": "employee",
+};
+
 describe("assets module mounts", () => {
   it("test_assets_module_mounts_ping", async () => {
     const app = createApp();
     const res = await request(app).get("/api/v1/assets/ping");
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ module: "assets" });
+  });
+});
+
+describe("assets RBAC gates", () => {
+  it("test_create_asset_requires_auth", async () => {
+    const app = createApp();
+    const res = await request(app).post("/api/v1/assets").send({ name: "X", category_id: 1 });
+    expect(res.status).toBe(401);
+  });
+
+  it("test_create_asset_employee_forbidden", async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post("/api/v1/assets")
+      .set(employeeHeaders)
+      .send({ name: "X", category_id: 1 });
+    expect(res.status).toBe(403);
+  });
+
+  it("test_allocate_requires_manager_role", async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post("/api/v1/allocations")
+      .set(employeeHeaders)
+      .send({ asset_id: 1, employee_id: 2 });
+    expect(res.status).toBe(403);
+  });
+
+  it("test_patch_rejects_status_field", async () => {
+    const app = createApp();
+    const res = await request(app)
+      .patch("/api/v1/assets/1")
+      .set(managerHeaders)
+      .send({ status: "Lost" });
+    expect(res.status).toBe(422);
+    expect(res.body.error?.code).toBe("VALIDATION_ERROR");
   });
 });
 

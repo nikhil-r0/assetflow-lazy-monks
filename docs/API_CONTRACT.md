@@ -2,18 +2,30 @@
 
 Base URL: `http://localhost:4000/api/v1`
 
-Frozen route list grows as tracks merge. Full specs live in `BUILD_SPEC.md`.
+Auth: `Authorization: Bearer <jwt>` **or** headers `x-user-id` + `x-user-role` (parallel-dev).
 
-## Live now (Track B Phase 0)
+## Live — Track B
 
-| Method | Path | Auth | Response |
-|---|---|---|---|
-| GET | `/health` | public | `{ status: "ok", db: false }` until A wires DB check |
-| GET | `/assets/ping` | public | `{ module: "assets" }` |
+| Method | Path | Roles |
+|---|---|---|
+| GET | `/assets/ping` | public |
+| POST | `/assets` | admin, asset_manager |
+| GET | `/assets` | auth |
+| GET | `/assets/:id` | auth |
+| PATCH | `/assets/:id` | admin, asset_manager (no `status`) |
+| PATCH | `/assets/:id/status` | admin, asset_manager |
+| GET | `/assets/:id/history` | auth |
+| POST | `/assets/:id/documents` | admin, asset_manager |
+| POST | `/allocations` | admin, asset_manager |
+| POST | `/allocations/:id/return` | admin, asset_manager |
 
-## Planned (do not invent extras)
+Double-allocation → **409** with `holder_name` in details.
 
-- **A:** `/auth/signup`, `/auth/login`, `/auth/me`, `/departments`, `/categories`, `/users`…
-- **B:** `/assets`, `/allocations`, `/transfer-requests`… (Phases 1–5)
-- **C:** `/bookings`, `/maintenance-requests`…
-- **D:** `/dashboard/kpis`, `/audit-cycles`, `/reports/*`, `/notifications`, `/activity-logs`…
+## Also live
+- C: `/bookings`, `/maintenance-requests`, `/operations/ping`
+- D: `/notifications`, `/activity-logs`, insights pings
+- `/health` — `db: true` when Postgres reachable (port **5434**)
+
+## Still planned
+- A: `/auth/*`, `/departments`, `/categories`, `/users`
+- B: `/transfer-requests`, overdue flag endpoint
