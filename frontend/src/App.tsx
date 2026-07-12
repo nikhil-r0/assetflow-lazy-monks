@@ -17,6 +17,8 @@ import {
   CalendarDays,
   Settings,
   LogOut,
+  Package,
+  ArrowLeftRight,
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./auth/AuthContext";
@@ -52,6 +54,8 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/assets", icon: Package, label: "Assets" },
+  { to: "/allocations", icon: ArrowLeftRight, label: "Allocations" },
   { to: "/bookings", icon: CalendarDays, label: "Bookings" },
   { to: "/maintenance", icon: Wrench, label: "Maintenance" },
   {
