@@ -20,3 +20,18 @@ export const listBookingsQuerySchema = z.object({
 });
 
 export type ListBookingsQuery = z.infer<typeof listBookingsQuerySchema>;
+
+export const calendarQuerySchema = z.object({
+  resource_asset_id: z.coerce.number().int().positive(),
+  from: z.string().min(1),
+  to: z.string().min(1),
+});
+
+export type CalendarQuery = z.infer<typeof calendarQuerySchema>;
+
+export const rescheduleBookingSchema = z.object({
+  start_time: z.string().min(1),
+  end_time: z.string().min(1),
+});
+
+export type RescheduleBookingInput = z.infer<typeof rescheduleBookingSchema>;

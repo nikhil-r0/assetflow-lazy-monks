@@ -286,26 +286,44 @@ export const assetService = {
     actorId: number,
     reason?: string,
   ) {
-    return prisma.$transaction(async (tx) => {
-      const asset = await tx.assets.findUnique({ where: { id: assetId } });
-      if (!asset) throw new NotFoundError("Asset not found");
+    return prisma.$transaction(async (tx) =>
+      assetService.transitionStatusTx(tx, assetId, to, actorId, reason),
+    );
+  },
 
-      const from = asset.status as AssetStatus;
-      transitionStatusPure(from, to);
+  /**
+   * Same machine as `transitionStatus`, but runs inside a caller-owned transaction
+   * (Track C Phase 4: maint approve/resolve must roll back together with asset flip).
+   */
+  async transitionStatusTx(
+    tx: Prisma.TransactionClient,
+    assetId: number,
+    to: AssetStatus,
+    actorId: number,
+    reason?: string,
+  ) {
+    const asset = await tx.assets.findUnique({ where: { id: assetId } });
+    if (!asset) throw new NotFoundError("Asset not found");
 
-      const updated = await tx.assets.update({
-        where: { id: assetId },
-        data: { status: to },
-      });
+    const from = asset.status as AssetStatus;
+    transitionStatusPure(from, to);
 
-      await logActivity(actorId, ACT.UPDATE_ASSET, "asset", assetId, {
-        from,
-        to,
-        reason,
-      });
-
-      return updated;
+    const updated = await tx.assets.update({
+      where: { id: assetId },
+      data: { status: to },
     });
+
+    await tx.activity_logs.create({
+      data: {
+        user_id: actorId,
+        action: ACT.UPDATE_ASSET,
+        entity_type: "asset",
+        entity_id: assetId,
+        metadata: { from, to, reason: reason ?? null },
+      },
+    });
+
+    return updated;
   },
 
   async allocate(input: AllocateAssetInput, actorId: number) {
