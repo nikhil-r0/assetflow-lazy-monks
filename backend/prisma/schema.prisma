@@ -1,0 +1,365 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ===== TRACK A: auth/org =====  (users, departments, asset_categories, category_custom_fields)
+
+model users {
+  id            Int         @id @default(autoincrement())
+  name          String      @db.VarChar(120)
+  email         String      @unique @db.VarChar(160)
+  password_hash String      @db.VarChar(255)
+  role          Role        @default(employee)
+  department_id Int?
+  status        UserStatus  @default(active)
+  created_at    DateTime    @default(now()) @db.Timestamptz
+
+  department          departments?           @relation("UserDepartment", fields: [department_id], references: [id], onDelete: SetNull)
+  headed_departments  departments[]          @relation("DepartmentHead")
+  allocations         allocations[]
+  transfer_requests_from transfer_requests[] @relation("TransferFromUser")
+  transfer_requests_to   transfer_requests[] @relation("TransferToUser")
+  transfer_requests_req  transfer_requests[] @relation("TransferRequestedBy")
+  transfer_requests_app  transfer_requests[] @relation("TransferApprovedBy")
+  bookings               bookings[]
+  maintenance_raised     maintenance_requests[] @relation("MaintenanceRaisedBy")
+  maintenance_approved   maintenance_requests[] @relation("MaintenanceApprovedBy")
+  audit_cycles_created   audit_cycles[]      @relation("AuditCycleCreator")
+  audit_cycle_auditors   audit_cycle_auditors[]
+  audit_items_verified   audit_items[]       @relation("AuditItemVerifier")
+  notifications          notifications[]
+  activity_logs          activity_logs[]
+
+  @@index([department_id])
+  @@index([role])
+}
+
+model departments {
+  id                   Int         @id @default(autoincrement())
+  name                 String      @unique @db.VarChar(120)
+  parent_department_id Int?
+  head_user_id         Int?
+  status               DeptStatus  @default(active)
+
+  parent_department    departments?  @relation("DepartmentHierarchy", fields: [parent_department_id], references: [id], onDelete: SetNull)
+  child_departments    departments[] @relation("DepartmentHierarchy")
+  head_user            users?        @relation("DepartmentHead", fields: [head_user_id], references: [id], onDelete: SetNull)
+  users                users[]       @relation("UserDepartment")
+  allocations          allocations[]
+  bookings             bookings[]
+  audit_cycles         audit_cycles[]
+
+  @@index([parent_department_id])
+  @@index([head_user_id])
+}
+
+model asset_categories {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(80)
+
+  custom_fields category_custom_fields[]
+  assets        assets[]
+}
+
+model category_custom_fields {
+  id          Int       @id @default(autoincrement())
+  category_id Int
+  field_name  String    @db.VarChar(80)
+  field_type  FieldType @default(text)
+
+  category asset_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([category_id, field_name])
+  @@index([category_id])
+}
+
+// ===== TRACK B: assets =====    (assets, asset_documents, allocations, transfer_requests)
+
+model assets {
+  id               Int         @id @default(autoincrement())
+  asset_tag        String      @unique @db.VarChar(20)
+  name             String      @db.VarChar(160)
+  category_id      Int
+  serial_number    String?     @db.VarChar(120)
+  acquisition_date DateTime?   @db.Date
+  acquisition_cost Decimal?    @db.Decimal(12, 2)
+  condition        String?     @db.VarChar(60)
+  location         String?     @db.VarChar(160)
+  custom_fields    Json?
+  is_bookable      Boolean     @default(false)
+  qr_code          String?     @db.VarChar(255)
+  status           AssetStatus @default(Available)
+  created_at       DateTime    @default(now()) @db.Timestamptz
+
+  category             asset_categories       @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  documents            asset_documents[]
+  allocations          allocations[]
+  transfer_requests    transfer_requests[]
+  bookings             bookings[]
+  maintenance_requests maintenance_requests[]
+  audit_items          audit_items[]
+
+  @@index([category_id])
+  @@index([status])
+  @@index([location])
+  @@index([serial_number])
+}
+
+model asset_documents {
+  id       Int     @id @default(autoincrement())
+  asset_id Int
+  file_url String  @db.VarChar(500)
+  doc_type String? @db.VarChar(60)
+
+  asset assets @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+
+  @@index([asset_id])
+}
+
+model allocations {
+  id                   Int         @id @default(autoincrement())
+  asset_id             Int
+  employee_id          Int?
+  department_id        Int?
+  allocated_date       DateTime    @default(now()) @db.Timestamptz
+  expected_return_date DateTime?   @db.Date
+  actual_return_date   DateTime?   @db.Timestamptz
+  status               AllocStatus @default(active)
+  condition_notes_out  String?     @db.VarChar(500)
+  condition_notes_in   String?     @db.VarChar(500)
+
+  asset      assets       @relation(fields: [asset_id], references: [id], onDelete: Restrict)
+  employee   users?       @relation(fields: [employee_id], references: [id], onDelete: SetNull)
+  department departments? @relation(fields: [department_id], references: [id], onDelete: SetNull)
+
+  @@index([asset_id])
+  @@index([employee_id])
+  @@index([department_id])
+  @@index([status])
+}
+
+model transfer_requests {
+  id           Int            @id @default(autoincrement())
+  asset_id     Int
+  from_user_id Int?
+  to_user_id   Int
+  requested_by Int
+  approved_by  Int?
+  status       TransferStatus @default(requested)
+  created_at   DateTime       @default(now()) @db.Timestamptz
+
+  asset          assets @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  from_user      users? @relation("TransferFromUser", fields: [from_user_id], references: [id])
+  to_user        users  @relation("TransferToUser", fields: [to_user_id], references: [id])
+  requester      users  @relation("TransferRequestedBy", fields: [requested_by], references: [id])
+  approver       users? @relation("TransferApprovedBy", fields: [approved_by], references: [id])
+
+  @@index([asset_id])
+  @@index([status])
+}
+
+// ===== TRACK C: operations =====(bookings, maintenance_requests)
+
+model bookings {
+  id                Int           @id @default(autoincrement())
+  resource_asset_id Int
+  booked_by_user_id Int
+  department_id     Int?
+  start_time        DateTime      @db.Timestamptz
+  end_time          DateTime      @db.Timestamptz
+  status            BookingStatus @default(upcoming)
+  created_at        DateTime      @default(now()) @db.Timestamptz
+
+  resource   assets       @relation(fields: [resource_asset_id], references: [id], onDelete: Cascade)
+  booked_by  users        @relation(fields: [booked_by_user_id], references: [id], onDelete: Restrict)
+  department departments? @relation(fields: [department_id], references: [id], onDelete: SetNull)
+
+  @@index([resource_asset_id, start_time, end_time])
+  @@index([status])
+}
+
+model maintenance_requests {
+  id                Int         @id @default(autoincrement())
+  asset_id          Int
+  raised_by         Int
+  issue_description String      @db.VarChar(1000)
+  priority          Priority    @default(medium)
+  photo_url         String?     @db.VarChar(500)
+  status            MaintStatus @default(pending)
+  approved_by       Int?
+  technician_name   String?     @db.VarChar(120)
+  created_at        DateTime    @default(now()) @db.Timestamptz
+  resolved_at       DateTime?   @db.Timestamptz
+
+  asset    assets @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  raiser   users  @relation("MaintenanceRaisedBy", fields: [raised_by], references: [id], onDelete: Restrict)
+  approver users? @relation("MaintenanceApprovedBy", fields: [approved_by], references: [id])
+
+  @@index([asset_id])
+  @@index([status])
+}
+
+// ===== TRACK D: insights =====  (audit_cycles, audit_cycle_auditors, audit_items, notifications, activity_logs)
+
+model audit_cycles {
+  id                  Int         @id @default(autoincrement())
+  name                String      @db.VarChar(160)
+  scope_department_id Int?
+  scope_location      String?     @db.VarChar(160)
+  start_date          DateTime    @db.Date
+  end_date            DateTime    @db.Date
+  status              AuditStatus @default(open)
+  created_by          Int
+
+  department departments?           @relation(fields: [scope_department_id], references: [id], onDelete: SetNull)
+  creator    users                  @relation("AuditCycleCreator", fields: [created_by], references: [id], onDelete: Restrict)
+  auditors   audit_cycle_auditors[]
+  items      audit_items[]
+
+  @@index([status])
+}
+
+model audit_cycle_auditors {
+  id              Int @id @default(autoincrement())
+  audit_cycle_id  Int
+  auditor_user_id Int
+
+  audit_cycle audit_cycles @relation(fields: [audit_cycle_id], references: [id], onDelete: Cascade)
+  auditor     users        @relation(fields: [auditor_user_id], references: [id], onDelete: Cascade)
+
+  @@unique([audit_cycle_id, auditor_user_id])
+}
+
+model audit_items {
+  id             Int          @id @default(autoincrement())
+  audit_cycle_id Int
+  asset_id       Int
+  result         AuditResult?
+  notes          String?      @db.VarChar(500)
+  verified_by    Int?
+  verified_at    DateTime?    @db.Timestamptz
+
+  audit_cycle audit_cycles @relation(fields: [audit_cycle_id], references: [id], onDelete: Cascade)
+  asset       assets       @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  verifier    users?       @relation("AuditItemVerifier", fields: [verified_by], references: [id])
+
+  @@unique([audit_cycle_id, asset_id])
+  @@index([audit_cycle_id])
+}
+
+model notifications {
+  id                  Int      @id @default(autoincrement())
+  user_id             Int
+  type                String   @db.VarChar(60)
+  message             String   @db.VarChar(500)
+  related_entity_type String?  @db.VarChar(60)
+  related_entity_id   Int?
+  is_read             Boolean  @default(false)
+  created_at          DateTime @default(now()) @db.Timestamptz
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read])
+  @@index([created_at])
+}
+
+model activity_logs {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  action      String   @db.VarChar(80)
+  entity_type String   @db.VarChar(60)
+  entity_id   Int?
+  metadata    Json?
+  created_at  DateTime @default(now()) @db.Timestamptz
+
+  user users? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([entity_type, entity_id])
+  @@index([created_at])
+}
+
+enum Role {
+  admin
+  asset_manager
+  department_head
+  employee
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+enum DeptStatus {
+  active
+  inactive
+}
+
+enum FieldType {
+  text
+  number
+  date
+  boolean
+}
+
+enum AssetStatus {
+  Available
+  Allocated
+  Reserved
+  Under_Maintenance
+  Lost
+  Retired
+  Disposed
+}
+
+enum AllocStatus {
+  active
+  returned
+  overdue
+}
+
+enum TransferStatus {
+  requested
+  approved
+  rejected
+  completed
+}
+
+enum BookingStatus {
+  upcoming
+  ongoing
+  completed
+  cancelled
+}
+
+enum Priority {
+  low
+  medium
+  high
+  critical
+}
+
+enum MaintStatus {
+  pending
+  approved
+  rejected
+  technician_assigned
+  in_progress
+  resolved
+}
+
+enum AuditStatus {
+  open
+  closed
+}
+
+enum AuditResult {
+  verified
+  missing
+  damaged
+}

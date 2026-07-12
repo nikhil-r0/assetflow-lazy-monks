@@ -1,0 +1,8 @@
+{
+  "name": "assetflow-lazy-monks",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
