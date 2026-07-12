@@ -11,7 +11,7 @@ import { userRoutes } from "./modules/auth/user.routes.js";
 import { categoryRoutes } from "./modules/auth/category.routes.js";
 
 // Track B
-import { assetsRouter } from "./modules/assets/assets.routes.js";
+import { allocationsRouter, assetsRouter } from "./modules/assets/assets.routes.js";
 
 // Track C
 import { bookingRouter } from "./modules/operations/booking.routes.js";
@@ -32,9 +32,15 @@ import { logsRouter } from "./modules/insights/logs.routes.js";
 export function createApp() {
   const app = express();
 
+  const corsOrigin = process.env.CORS_ORIGIN || "*";
+  const allowedOrigins =
+    corsOrigin === "*"
+      ? true
+      : corsOrigin.split(",").map((o) => o.trim()).filter(Boolean);
+
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN || "*",
+      origin: allowedOrigins,
     }),
   );
 
@@ -58,6 +64,7 @@ export function createApp() {
   // Track B Routes
   // ----------------------
   app.use("/api/v1/assets", assetsRouter);
+  app.use("/api/v1/allocations", allocationsRouter);
 
   // ----------------------
   // Track C Routes

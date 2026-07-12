@@ -1,7 +1,6 @@
 import "./App.css";
 
 import {
-  BrowserRouter,
   Routes,
   Route,
   NavLink,
@@ -14,6 +13,8 @@ import {
   Bell,
   BarChart3,
   Activity,
+  Wrench,
+  CalendarDays,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import { AllocationPage } from "./pages/assets/Allocation";
 
 // Track C
 import { BookingPage } from "./pages/ops/Booking";
+import { MaintenancePage } from "./pages/ops/Maintenance";
 
 // Track D
 import Notifications from "./pages/insights/Notifications";
@@ -77,6 +79,16 @@ const NAV = [
     to: "/dashboard",
     icon: LayoutDashboard,
     label: "Dashboard",
+  },
+  {
+    to: "/bookings",
+    icon: CalendarDays,
+    label: "Bookings",
+  },
+  {
+    to: "/maintenance",
+    icon: Wrench,
+    label: "Maintenance",
   },
   {
     to: "/audit",
@@ -201,6 +213,7 @@ const Layout = () => {
 
             {/* Track C */}
             <Route path="/bookings" element={<BookingPage />} />
+            <Route path="/maintenance" element={<MaintenancePage />} />
 
             <Route
               path="*"
@@ -260,8 +273,8 @@ const AppRoutes = () => {
 
 export default function App() {
   return (
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
