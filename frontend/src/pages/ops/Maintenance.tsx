@@ -17,6 +17,7 @@ type MaintRow = {
   technician_name?: string | null;
   resolved_at?: string | null;
   created_at: string;
+  asset?: { id: number; asset_tag: string; name: string; status: string };
 };
 
 const MANAGER_ACTIONS: Record<string, string[]> = {
@@ -214,6 +215,11 @@ export function MaintenancePage() {
                     {r.priority}
                   </span>
                   <span className="text-gray-500">asset {r.asset_id}</span>
+                  {r.asset?.status && (
+                    <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+                      asset: {r.asset.status}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 text-gray-800">{r.issue_description}</p>
                 {r.technician_name && (

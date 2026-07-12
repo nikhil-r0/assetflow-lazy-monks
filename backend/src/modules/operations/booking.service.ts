@@ -1,14 +1,23 @@
-import { ACT, BookingStatus, NOTIF } from "../../shared/enums.js";
+import { ACT, BookingStatus, NOTIF, Role } from "../../shared/enums.js";
+import { ForbiddenError } from "../../shared/auth.js";
 import { AppError, NotFoundError } from "../../shared/errors.js";
 import { logActivity } from "../../shared/activity.js";
 import { createNotification } from "../../shared/notify.js";
 import { prisma } from "../../shared/prisma.js";
-import type { CreateBookingInput, ListBookingsQuery } from "./booking.schema.js";
+import type {
+  CalendarQuery,
+  CreateBookingInput,
+  ListBookingsQuery,
+  RescheduleBookingInput,
+} from "./booking.schema.js";
+import { nextAutoBookingStatus } from "./bookingStatus.js";
 import {
   assertValidBookingRange,
   findOverlappingBooking,
   overlapError,
 } from "./overlap.js";
+
+type Actor = { id: number; role: Role };
 
 /**
  * Lock the asset row so concurrent booking creates cannot both pass the overlap
@@ -29,6 +38,11 @@ export async function lockAssetForUpdate(
     throw new NotFoundError("Asset not found");
   }
   return row;
+}
+
+function canManageBooking(actor: Actor, bookedByUserId: number): boolean {
+  if (actor.id === bookedByUserId) return true;
+  return actor.role === Role.admin || actor.role === Role.asset_manager;
 }
 
 export const bookingService = {
@@ -80,7 +94,6 @@ export const bookingService = {
       });
     });
 
-    // Side effects after commit so notify/log never hold the row lock
     await createNotification(
       actorId,
       NOTIF.BOOKING_CONFIRMED,
@@ -137,5 +150,174 @@ export const bookingService = {
         totalPages: Math.max(1, Math.ceil(total / pageSize)),
       },
     };
+  },
+
+  /** Phase 3 — range-bounded calendar feed (no pagination). */
+  async calendar(query: CalendarQuery) {
+    const from = new Date(query.from);
+    const to = new Date(query.to);
+    assertValidBookingRange(from, to);
+
+    return prisma.bookings.findMany({
+      where: {
+        resource_asset_id: query.resource_asset_id,
+        start_time: { lt: to },
+        end_time: { gt: from },
+      },
+      orderBy: { start_time: "asc" },
+    });
+  },
+
+  /**
+   * Phase 3 — apply time-derived status transitions.
+   * Idempotent; skips cancelled. Callable from route + boot interval.
+   */
+  async refreshStatus(now = new Date()) {
+    const candidates = await prisma.bookings.findMany({
+      where: {
+        status: { in: [BookingStatus.upcoming, BookingStatus.ongoing] },
+      },
+    });
+
+    let updated = 0;
+    for (const row of candidates) {
+      const next = nextAutoBookingStatus(now, row.start_time, row.end_time, row.status);
+      if (!next) continue;
+      const result = await prisma.bookings.updateMany({
+        where: { id: row.id, status: row.status },
+        data: { status: next },
+      });
+      updated += result.count;
+    }
+    return { updated };
+  },
+
+  async cancel(id: number, actor: Actor) {
+    const row = await prisma.bookings.findUnique({ where: { id } });
+    if (!row) throw new NotFoundError("Booking not found");
+    if (!canManageBooking(actor, row.booked_by_user_id)) {
+      throw new ForbiddenError("Not allowed to cancel this booking");
+    }
+    if (
+      row.status === BookingStatus.completed ||
+      row.status === BookingStatus.cancelled
+    ) {
+      throw new AppError("UNPROCESSABLE", 422, "Booking cannot be cancelled", [
+        { field: "status", issue: "illegal_transition", from: row.status },
+      ]);
+    }
+
+    const updated = await prisma.bookings.update({
+      where: { id },
+      data: { status: BookingStatus.cancelled },
+    });
+
+    await createNotification(
+      row.booked_by_user_id,
+      NOTIF.BOOKING_CANCELLED,
+      `Booking #${id} cancelled`,
+      "booking",
+      id,
+    );
+    await logActivity(actor.id, ACT.CANCEL_BOOKING, "booking", id);
+    return updated;
+  },
+
+  async reschedule(id: number, input: RescheduleBookingInput, actor: Actor) {
+    const start = new Date(input.start_time);
+    const end = new Date(input.end_time);
+    assertValidBookingRange(start, end);
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const row = await tx.bookings.findUnique({ where: { id } });
+      if (!row) throw new NotFoundError("Booking not found");
+      if (!canManageBooking(actor, row.booked_by_user_id)) {
+        throw new ForbiddenError("Not allowed to reschedule this booking");
+      }
+      if (row.status !== BookingStatus.upcoming) {
+        throw new AppError(
+          "UNPROCESSABLE",
+          422,
+          "Only upcoming bookings can be rescheduled",
+          [{ field: "status", issue: "must_be_upcoming", from: row.status }],
+        );
+      }
+
+      await lockAssetForUpdate(tx, row.resource_asset_id);
+
+      const existing = await tx.bookings.findMany({
+        where: {
+          resource_asset_id: row.resource_asset_id,
+          status: { in: [BookingStatus.upcoming, BookingStatus.ongoing] },
+          start_time: { lt: end },
+          end_time: { gt: start },
+        },
+      });
+
+      const clash = findOverlappingBooking(
+        start,
+        end,
+        existing.map((b) => ({
+          id: b.id,
+          start: b.start_time,
+          end: b.end_time,
+          status: b.status,
+        })),
+        id,
+      );
+      if (clash) {
+        throw overlapError(clash.id);
+      }
+
+      return tx.bookings.update({
+        where: { id },
+        data: {
+          start_time: start,
+          end_time: end,
+          reminder_sent: false,
+        },
+      });
+    });
+
+    await logActivity(actor.id, ACT.CREATE_BOOKING, "booking", id, {
+      action: "reschedule",
+      start_time: start.toISOString(),
+      end_time: end.toISOString(),
+    });
+    return updated;
+  },
+
+  /**
+   * Phase 5 — remind bookers of upcoming slots starting within 15 minutes.
+   * Idempotent via `reminder_sent`.
+   */
+  async emitReminders(now = new Date()) {
+    const windowEnd = new Date(now.getTime() + 15 * 60 * 1000);
+    const due = await prisma.bookings.findMany({
+      where: {
+        status: BookingStatus.upcoming,
+        reminder_sent: false,
+        start_time: { gt: now, lte: windowEnd },
+      },
+    });
+
+    let reminded = 0;
+    for (const row of due) {
+      const result = await prisma.bookings.updateMany({
+        where: { id: row.id, reminder_sent: false },
+        data: { reminder_sent: true },
+      });
+      if (result.count === 0) continue;
+
+      await createNotification(
+        row.booked_by_user_id,
+        NOTIF.BOOKING_REMINDER,
+        `Reminder: booking #${row.id} starts soon`,
+        "booking",
+        row.id,
+      );
+      reminded += 1;
+    }
+    return { reminded };
   },
 };
