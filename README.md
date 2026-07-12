@@ -1,134 +1,121 @@
-# AssetFlow — Lazy Monks
+# 📦 AssetFlow
 
-Enterprise Asset & Resource Management System (hackathon).
+**Enterprise Asset & Resource Management System**  
+*Built by Lazy Monks for the Hackathon*
 
-## Docs (read in this order)
-
-| File | Purpose |
-|---|---|
-| **`BUILD_SPEC.md`** *(local only — gitignored)* | Full build bible: schema, RBAC, APIs, phases, tests. **Authority for code.** |
-| **`ASSETFLOW.md`** | Short winning guide: thesis, 3 hard rules, demo script, DoD |
-| **`AssetFlow_Hackathon_Plan.md`** | 8-hour schedule + who owns A/B/C/D |
-| **[Issue #12](https://github.com/nikhil-r0/assetflow-lazy-monks/issues/12)** | Live tracker: what’s on `develop`, what’s left, 3 hard rules |
-
-If docs disagree → **`BUILD_SPEC.md` wins**.
-
-## Tracks at a glance
-
-| Track | Screens | Owns |
-|---|---|---|
-| **A — Auth/Org** | 1, 3 | Login/signup, RBAC, departments, categories, employee promote |
-| **B — Assets** | 4, 5 | Registry, allocate/return, transfer, overdue (**Rule 1**) |
-| **C — Operations** | 6, 7 | Booking overlap (**Rule 2**), maintenance gate (**Rule 3**) |
-| **D — Insights** | 2, 8, 9, 10 | Dashboard, audit, reports, notifications/logs |
-
-Living done/todo → **[Issue #12](https://github.com/nikhil-r0/assetflow-lazy-monks/issues/12)**.
+AssetFlow is a comprehensive, feature-sliced enterprise platform designed to manage organizational assets, roles, resource bookings, and maintenance life-cycles. It enforces strict domain logic with believable Role-Based Access Control (RBAC), ensuring that asset allocation, transfer, and maintenance are handled securely and efficiently.
 
 ---
 
-## Local QA (every teammate)
+## ✨ Key Features & The "3 Hard Rules"
 
-Run the stack locally so you can visually QA what you build before merging.
+AssetFlow features 10 core screens spanning Authentication, Dashboards, Organizational Setup, Asset Registration, Allocation, Bookings, Maintenance, Auditing, and Reporting. 
+
+To ensure absolute data integrity, the system strictly enforces **3 Hard Rules**:
+
+1. **No Double Allocation**: If an active allocation exists, any attempt to re-allocate results in a `409 CONFLICT`, prompting a formal "Transfer Request" workflow.
+2. **Booking Overlap Prevention**: Resource bookings (e.g., meeting rooms) enforce strict half-open `[start, end)` time intervals. Overlapping bookings are rejected instantly.
+3. **Maintenance Gating**: Assets can only enter the `Under_Maintenance` status through an approved maintenance workflow, preventing unauthorized manual status overrides.
+
+---
+
+## 🛠️ Technology Stack
+
+Our robust, single-stack architecture ensures developer velocity and type safety across the board:
+
+- **Backend**: Node.js (20+), Express.js
+- **Database & ORM**: PostgreSQL 16, Prisma
+- **Frontend**: React 18, Vite, Tailwind CSS, TanStack Query, React Router v6
+- **Language**: TypeScript throughout
+- **Testing**: Vitest (Unit) & Supertest (Integration)
+- **Architecture**: Monorepo via npm workspaces (`backend/` & `frontend/`)
+
+---
+
+## 🚀 Getting Started (Local QA)
+
+Follow these steps to run the entire stack locally for development and testing.
 
 ### Prerequisites
 - Node **20+**, npm **10+**
-- **Docker** (Desktop or Engine) for Postgres
+- **Docker** (Desktop or Engine) for PostgreSQL
 
-### One-time setup
+### One-Time Setup
 
 ```bash
+# 1. Clone and install dependencies
 git clone git@github.com:nikhil-r0/assetflow-lazy-monks.git
 cd assetflow-lazy-monks
 git checkout develop && git pull
 npm install
 
-# Postgres (host port 5434 → container 5432)
+# 2. Start PostgreSQL via Docker (maps to port 5434 to avoid conflicts)
 docker compose up -d
 
-# Backend env — use port 5434 to match docker-compose
+# 3. Configure backend environment variables
 cp backend/.env.example backend/.env
-# Confirm DATABASE_URL uses localhost:5434
+# Note: Ensure DATABASE_URL in .env uses localhost:5434
 
+# 4. Deploy schema and seed the database
 cd backend
 npx prisma migrate deploy
 npx prisma generate
-npm run seed                 # demo data (idempotent — safe to re-run)
+npm run seed  # Safe to run multiple times
 ```
 
-`backend/.env` should look like:
+### Running the Application
 
-```env
-DATABASE_URL="postgresql://assetflow:assetflow@localhost:5434/assetflow?schema=public"
-JWT_SECRET="dev-secret-change-me"
-PORT=4000
-NODE_ENV=development
-CORS_ORIGIN="http://localhost:5173"
-```
+You will need two terminals to run the API and UI concurrently.
 
-### Every session (two terminals)
-
-```bash
-# terminal 1 — API
-cd backend && npm run dev
-# → http://localhost:4000
-
-# terminal 2 — UI
-cd frontend && npm run dev
-# → http://localhost:5173
-```
-
-### Smoke check
-1. Open http://localhost:5173 — signup (employee) → login
-2. Exercise the screens for your track
-3. http://localhost:4000/api/v1/health → `{ "status": "ok", "db": true }`
-4. Optional: `cd backend && npx prisma studio` to inspect tables
-
-### After pulling `develop`
-
-```bash
-git pull origin develop
-npm install                  # if package-lock changed
-docker compose up -d         # if DB was stopped
-cd backend && npx prisma migrate deploy && npx prisma generate
-npm run seed                 # if you want/need demo rows again (skips existing)
-# then start backend + frontend as above
-```
-
-### Seed demo data
-
-Idempotent seed (skip/upsert — does **not** wipe tables):
-
+**Terminal 1 (Backend API):**
 ```bash
 cd backend
-npm run seed
-# or: npx prisma db seed
+npm run dev
+# API running at http://localhost:4000
 ```
 
-Creates departments, roles, categories, assets (`AF-0001`, `AF-0002`, `AF-ROOM1`), allocation/transfer/booking/maintenance/audit rows, plus notifications and activity logs.
-
-### Common footguns
-
-| Symptom | Fix |
-|---|---|
-| Health `db: false` / connection refused | `DATABASE_URL` must use port **5434** (compose mapping) |
-| Prisma client / schema errors after pull | `cd backend && npx prisma generate` |
-| CORS / browser can’t reach API | FE on `5173`, API on `4000`, `CORS_ORIGIN` matches |
-| Port 5434 already in use | Change compose host port **and** `.env` together |
-
-### Tests
-
+**Terminal 2 (Frontend UI):**
 ```bash
-cd backend && npm test
+cd frontend
+npm run dev
+# UI running at http://localhost:5173
 ```
 
-## Seed accounts
-
-Password for all demo users: **`Passw0rd!`**
+### Seed Accounts
+Log in at `http://localhost:5173` with any of the following seeded accounts. **Password for all users is `Passw0rd!`**
 
 | Email | Role |
 |---|---|
-| `admin@assetflow.dev` | admin |
-| `manager@assetflow.dev` | asset_manager |
-| `head@assetflow.dev` | department_head |
-| `employee@assetflow.dev` (Priya) | employee |
-| `sales@assetflow.dev` (Raj) | employee |
+| `admin@assetflow.dev` | Admin |
+| `manager@assetflow.dev` | Asset Manager |
+| `head@assetflow.dev` | Department Head |
+| `employee@assetflow.dev` (Priya) | Employee |
+| `sales@assetflow.dev` (Raj) | Employee |
+
+---
+
+## 📚 Documentation Reference
+
+For developers and agents working on the repository, refer to the following internal documentation:
+
+- **[`BUILD_SPEC.md`](./BUILD_SPEC.md)**: The build bible containing schema, RBAC rules, APIs, phases, and tests. *(This is the ultimate authority for code)*
+- **[`ASSETFLOW.md`](./ASSETFLOW.md)**: Guide to winning the hackathon—thesis, rules, demo script, and DoD.
+- **[`AssetFlow_Hackathon_Plan.md`](./AssetFlow_Hackathon_Plan.md)**: The 8-hour execution schedule and ownership breakdown.
+- **[`STATUS.md`](./STATUS.md)** (or Issue #12): Live tracker of what is currently on `develop` and what remains to be done.
+
+---
+
+## 🏗️ Hackathon Tracks
+
+The project is split into 4 parallel tracks to maximize efficiency during the 8-hour build:
+
+| Track | Focus | Core Responsibilities |
+|---|---|---|
+| **A (Auth/Org)** | Auth & Master Data | Login/Signup, JWT RBAC, Departments, Categories, Role Promotion |
+| **B (Assets)** | Core Asset Lifecycle | Asset Registry, Allocations, Transfers, Overdue tracking (Rule 1) |
+| **C (Ops)** | Bookings & Maintenance| Calendar overlaps (Rule 2), Maintenance gate state machine (Rule 3) |
+| **D (Insights)**| Analytics & Auditing | Dashboards, KPIs, Audit Discrepancies, Reports, Notifications |
+
+---
+
+> **Note on Branching:** All active work should branch from `develop`. The `main` branch is reserved for tagged, demo-safe checkpoints.
