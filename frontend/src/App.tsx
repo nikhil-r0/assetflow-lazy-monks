@@ -1,6 +1,6 @@
-import React from "react";
 import {
   BrowserRouter,
+  Link,
   Navigate,
   Outlet,
   Route,
@@ -18,23 +18,22 @@ import { RegistryPage } from "./pages/assets/Registry";
 import { AssetFormPage } from "./pages/assets/AssetForm";
 import { AllocationPage } from "./pages/assets/Allocation";
 
-// Track D (when implemented)
-// import { DashboardPage } from "./pages/dashboard/Dashboard";
+// Track C
+import { BookingPage } from "./pages/ops/Booking";
 
 const Layout = () => {
   return (
     <div className="flex h-screen w-full bg-gray-50">
       <aside className="w-64 border-r bg-white flex flex-col">
         <div className="border-b p-4">
-          <h1 className="text-xl font-bold text-indigo-600">
-            AssetFlow
-          </h1>
+          <h1 className="text-xl font-bold text-indigo-600">AssetFlow</h1>
         </div>
 
-        <nav className="flex-1 p-4">
-          <p className="text-sm text-gray-500">
-            Navigation Placeholder
-          </p>
+        <nav className="flex-1 p-4 flex flex-col gap-2 text-sm">
+          <Link to="/assets">Registry</Link>
+          <Link to="/assets/new">Register</Link>
+          <Link to="/allocations">Allocations</Link>
+          <Link to="/bookings">Bookings</Link>
         </nav>
       </aside>
 
@@ -59,20 +58,12 @@ const AppRoutes = () => {
 
         <Route
           element={
-            isAuthenticated ? (
-              <Layout />
-            ) : (
-              <Navigate to="/login" replace />
-            )
+            isAuthenticated ? <Layout /> : <Navigate to="/login" replace />
           }
         >
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          {/* Dashboard */}
-          <Route
-            path="/dashboard"
-            element={<div>Dashboard Placeholder</div>}
-          />
+          <Route path="/dashboard" element={<div>Dashboard Placeholder</div>} />
 
           {/* Track B */}
           <Route path="/assets" element={<RegistryPage />} />
@@ -80,10 +71,7 @@ const AppRoutes = () => {
           <Route path="/allocations" element={<AllocationPage />} />
 
           {/* Track C */}
-          {/* <Route path="/bookings" element={<BookingsPage />} /> */}
-
-          {/* Track D */}
-          {/* <Route path="/reports" element={<ReportsPage />} /> */}
+          <Route path="/bookings" element={<BookingPage />} />
         </Route>
       </Routes>
   );
