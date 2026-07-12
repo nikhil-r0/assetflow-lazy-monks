@@ -7,10 +7,11 @@ export const dashboardRouter = Router();
 // GET /dashboard/kpis - computed counters scoped by role/department
 dashboardRouter.get("/kpis", requireAuth, async (req, res, next) => {
   try {
+    const actor = req.user!;
     const kpis = await DashboardService.getKpis(
-      req.user.id,
-      req.user.role,
-      req.user.department_id
+      actor.id,
+      actor.role,
+      actor.department_id || undefined
     );
     res.status(200).json(kpis);
   } catch (error) {
@@ -21,10 +22,11 @@ dashboardRouter.get("/kpis", requireAuth, async (req, res, next) => {
 // GET /dashboard/overdue - allocations with overdue status
 dashboardRouter.get("/overdue", requireAuth, async (req, res, next) => {
   try {
+    const actor = req.user!;
     const list = await DashboardService.getOverdueReturns(
-      req.user.id,
-      req.user.role,
-      req.user.department_id
+      actor.id,
+      actor.role,
+      actor.department_id || undefined
     );
     res.status(200).json(list);
   } catch (error) {
@@ -35,10 +37,11 @@ dashboardRouter.get("/overdue", requireAuth, async (req, res, next) => {
 // GET /dashboard/upcoming-returns - active allocations due within 7 days
 dashboardRouter.get("/upcoming-returns", requireAuth, async (req, res, next) => {
   try {
+    const actor = req.user!;
     const list = await DashboardService.getUpcomingReturns(
-      req.user.id,
-      req.user.role,
-      req.user.department_id
+      actor.id,
+      actor.role,
+      actor.department_id || undefined
     );
     res.status(200).json(list);
   } catch (error) {

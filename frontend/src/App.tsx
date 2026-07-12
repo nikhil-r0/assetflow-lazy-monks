@@ -41,19 +41,7 @@ import Audit from "./pages/insights/Audit";
 import AuditCycle from "./pages/insights/AuditCycle";
 import Notifications from "./pages/insights/Notifications";
 import ActivityLogs from "./pages/insights/ActivityLogs";
-function Reports() {
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">
-        Reports &amp; Analytics
-      </h1>
-      <p className="mt-2 text-gray-500">
-        Analytics charts coming in Phase 5.
-      </p>
-    </div>
-  );
-}
-
+import Reports from "./pages/insights/Reports";
 const NAV = [
   {
     to: "/dashboard",

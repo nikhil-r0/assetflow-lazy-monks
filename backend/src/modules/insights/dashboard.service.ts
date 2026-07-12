@@ -1,5 +1,5 @@
-import { prisma } from "../../shared/prisma";
-import { Role, AssetStatus, AllocStatus, BookingStatus, TransferStatus, MaintStatus } from "../../shared/enums";
+import { prisma } from "../../shared/prisma.js";
+import { Role, AssetStatus, AllocStatus, BookingStatus, TransferStatus, MaintStatus } from "../../shared/enums.js";
 
 export interface KpisResponse {
   assets_available: number;
@@ -205,7 +205,7 @@ export class DashboardService {
     });
 
     const now = new Date();
-    return allocations.map((a) => {
+    return allocations.map((a: any) => {
       let daysOverdue = 0;
       if (a.expected_return_date) {
         const expected = new Date(a.expected_return_date);
@@ -257,7 +257,7 @@ export class DashboardService {
       orderBy: { expected_return_date: "asc" }
     });
 
-    return allocations.map((a) => ({
+    return allocations.map((a: any) => ({
       id: a.id,
       asset_id: a.asset_id,
       asset: a.asset,

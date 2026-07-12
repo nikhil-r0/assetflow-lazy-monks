@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../auth/AuthContext";
 import {
   ArrowLeft,
   Calendar,
@@ -14,6 +15,7 @@ import {
   HelpCircle,
   Loader2,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 import { apiClient } from "../../api/client";
 
@@ -21,10 +23,13 @@ export default function AuditCycle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [newAuditorId, setNewAuditorId] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [itemNotes, setItemNotes] = useState<Record<number, string>>({});
 
   const cycleId = Number(id);
+  const isManager = user?.role === "admin" || user?.role === "asset_manager";
 
   // 1. Fetch audit cycle details
   const { data: cycle, isLoading, error } = useQuery({
@@ -35,7 +40,17 @@ export default function AuditCycle() {
     },
   });
 
-  // 2. Fetch all users for assignment dropdown
+  // 2. Fetch discrepancy report (only if closed)
+  const { data: discrepancyReport } = useQuery({
+    queryKey: ["discrepancyReport", cycleId],
+    queryFn: async () => {
+      const res = await apiClient.get<any>(`/audit-cycles/${cycleId}/discrepancy-report`);
+      return res.data;
+    },
+    enabled: cycle?.status === "closed",
+  });
+
+  // 3. Fetch all users for assignment dropdown
   const { data: users } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
@@ -48,7 +63,7 @@ export default function AuditCycle() {
     },
   });
 
-  // 3. Assign auditor mutation
+  // 4. Assign auditor mutation
   const assignMutation = useMutation({
     mutationFn: async (userId: number) => {
       await apiClient.post(`/audit-cycles/${cycleId}/auditors`, { auditor_user_id: userId });
@@ -63,13 +78,40 @@ export default function AuditCycle() {
     },
   });
 
-  // 4. Remove auditor mutation
+  // 5. Remove auditor mutation
   const removeMutation = useMutation({
     mutationFn: async (userId: number) => {
       await apiClient.delete(`/audit-cycles/${cycleId}/auditors/${userId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auditCycle", cycleId] });
+    },
+  });
+
+  // 6. Verify item mutation (Phase 4)
+  const verifyItemMutation = useMutation({
+    mutationFn: async ({ itemId, result, notes }: { itemId: number; result: string; notes?: string }) => {
+      await apiClient.patch(`/audit-items/${itemId}`, { result, notes });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditCycle", cycleId] });
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.error || "Failed to verify item");
+    },
+  });
+
+  // 7. Close cycle mutation (Phase 4)
+  const closeCycleMutation = useMutation({
+    mutationFn: async () => {
+      await apiClient.post(`/audit-cycles/${cycleId}/close`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditCycle", cycleId] });
+      queryClient.invalidateQueries({ queryKey: ["discrepancyReport", cycleId] });
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.error || "Failed to close cycle");
     },
   });
 
@@ -116,6 +158,8 @@ export default function AuditCycle() {
       ? Math.round(((cycle.summary.total - cycle.summary.unchecked) / cycle.summary.total) * 100)
       : 0;
 
+  const isClosed = cycle.status === "closed";
+
   return (
     <div className="min-h-screen bg-gray-50/50 p-6 sm:p-8 space-y-8">
       {/* Navigation & Title */}
@@ -128,7 +172,7 @@ export default function AuditCycle() {
           Back to Audits
         </button>
 
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight m-0">
               {cycle.name}
@@ -146,7 +190,7 @@ export default function AuditCycle() {
                   {cycle.scope_location}
                 </span>
               )}
-              {cycle.department && (
+              {cycle.scope_department_id && cycle.department && (
                 <span className="flex items-center gap-1">
                   <Building className="h-3.5 w-3.5" />
                   {cycle.department.name}
@@ -154,13 +198,34 @@ export default function AuditCycle() {
               )}
             </div>
           </div>
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
-              cycle.status === "closed" ? "bg-gray-100 text-gray-700" : "bg-emerald-100 text-emerald-700"
-            }`}
-          >
-            {cycle.status}
-          </span>
+          <div className="flex items-center gap-3">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
+                isClosed ? "bg-gray-150 text-gray-700" : "bg-emerald-100 text-emerald-700"
+              }`}
+            >
+              {cycle.status}
+            </span>
+
+            {isManager && !isClosed && (
+              <button
+                onClick={() => {
+                  if (confirm("Are you sure you want to close this cycle? This will lock all verifications and mark missing assets as LOST.")) {
+                    closeCycleMutation.mutate();
+                  }
+                }}
+                disabled={closeCycleMutation.isPending}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+              >
+                {closeCycleMutation.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Lock className="h-3.5 w-3.5" />
+                )}
+                Close Cycle
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -209,6 +274,45 @@ export default function AuditCycle() {
         </div>
       </div>
 
+      {/* Discrepancy report section if closed */}
+      {isClosed && discrepancyReport && (
+        <div className="bg-red-50/50 border border-red-100 rounded-2xl p-6 space-y-4">
+          <h2 className="text-lg font-bold text-red-900 flex items-center gap-2 m-0">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+            Discrepancy Report Summary
+          </h2>
+          <p className="text-sm text-red-700">
+            This cycle was closed. Below are the discrepancies identified during the audit. All items marked as "missing" have been set to status LOST.
+          </p>
+
+          {discrepancyReport.discrepancies.length === 0 ? (
+            <div className="text-sm text-emerald-700 font-medium">Perfect Audit! No discrepancies found.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {discrepancyReport.discrepancies.map((d: any) => (
+                <div key={d.audit_item_id} className="bg-white p-4 rounded-xl border border-red-200/60 shadow-2xs space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-xs font-mono font-bold text-purple-700">{d.asset_tag}</span>
+                      <h4 className="text-sm font-bold text-gray-900 mt-0.5">{d.asset_name}</h4>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                      d.result === "missing" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                    }`}>
+                      {d.result}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    <div>Notes: <span className="text-gray-700 font-medium">{d.notes || "None"}</span></div>
+                    <div className="mt-1">Verified by {d.verified_by} at {new Date(d.verified_at).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Items snapshot table */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs lg:col-span-2 space-y-4">
@@ -221,8 +325,9 @@ export default function AuditCycle() {
                 <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   <th className="pb-3 pr-4">Asset Tag</th>
                   <th className="pb-3 pr-4">Name</th>
-                  <th className="pb-3 pr-4">Status</th>
-                  <th className="pb-3">Audit Status</th>
+                  <th className="pb-3 pr-4">Snapshot Status</th>
+                  <th className="pb-3 pr-4">Audit Status</th>
+                  {!isClosed && <th className="pb-3 text-right">Verification Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -240,28 +345,64 @@ export default function AuditCycle() {
                           {item.asset.status}
                         </span>
                       </td>
-                      <td className="py-3.5 text-xs">
+                      <td className="py-3.5 pr-4 text-xs">
                         {item.result ? (
-                          <span
-                            className={`px-2 py-0.5 rounded-full font-bold uppercase ${
-                              item.result === "verified"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : item.result === "missing"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-amber-100 text-amber-700"
-                            }`}
-                          >
-                            {item.result}
-                          </span>
+                          <div className="space-y-1">
+                            <span
+                              className={`px-2 py-0.5 rounded-full font-bold uppercase ${
+                                item.result === "verified"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : item.result === "missing"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-amber-100 text-amber-700"
+                              }`}
+                            >
+                              {item.result}
+                            </span>
+                            {item.notes && <p className="text-[10px] text-gray-400 max-w-[150px] truncate">{item.notes}</p>}
+                          </div>
                         ) : (
                           <span className="text-gray-400 italic">Unchecked</span>
                         )}
                       </td>
+                      {!isClosed && (
+                        <td className="py-3.5 text-right">
+                          <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2">
+                            <input
+                              type="text"
+                              placeholder="Notes..."
+                              value={itemNotes[item.id] || ""}
+                              onChange={(e) => setItemNotes({ ...itemNotes, [item.id]: e.target.value })}
+                              className="px-2 py-1 text-xs border border-gray-200 rounded-lg max-w-[120px] focus:outline-hidden"
+                            />
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => verifyItemMutation.mutate({ itemId: item.id, result: "verified", notes: itemNotes[item.id] })}
+                                className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-bold transition cursor-pointer"
+                              >
+                                Verify
+                              </button>
+                              <button
+                                onClick={() => verifyItemMutation.mutate({ itemId: item.id, result: "damaged", notes: itemNotes[item.id] })}
+                                className="px-2 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 rounded-lg text-xs font-bold transition cursor-pointer"
+                              >
+                                Damaged
+                              </button>
+                              <button
+                                onClick={() => verifyItemMutation.mutate({ itemId: item.id, result: "missing", notes: itemNotes[item.id] })}
+                                className="px-2 py-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-lg text-xs font-bold transition cursor-pointer"
+                              >
+                                Missing
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-gray-400 italic">
+                    <td colSpan={5} className="py-8 text-center text-gray-400 italic">
                       No assets in scope for this audit cycle.
                     </td>
                   </tr>
@@ -295,12 +436,14 @@ export default function AuditCycle() {
                         {auditor.email}
                       </p>
                     </div>
-                    <button
-                      onClick={() => removeMutation.mutate(auditor.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {!isClosed && (
+                      <button
+                        onClick={() => removeMutation.mutate(auditor.id)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
@@ -312,53 +455,55 @@ export default function AuditCycle() {
           </div>
 
           {/* Form to assign a new auditor */}
-          <form onSubmit={handleAssign} className="border-t border-gray-100 pt-6 space-y-4">
-            {errorMsg && (
-              <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {errorMsg}
-              </div>
-            )}
+          {!isClosed && (
+            <form onSubmit={handleAssign} className="border-t border-gray-100 pt-6 space-y-4">
+              {errorMsg && (
+                <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {errorMsg}
+                </div>
+              )}
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-600">Assign Auditor</label>
-              <div className="flex gap-2">
-                {users && users.length > 0 ? (
-                  <select
-                    value={newAuditorId}
-                    onChange={(e) => setNewAuditorId(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500 bg-white"
-                  >
-                    <option value="">Select Auditor...</option>
-                    {users.map((u: any) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} ({u.email})
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="number"
-                    placeholder="Enter Auditor User ID"
-                    value={newAuditorId}
-                    onChange={(e) => setNewAuditorId(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500"
-                  />
-                )}
-                <button
-                  type="submit"
-                  disabled={assignMutation.isPending}
-                  className="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center cursor-pointer shadow-xs"
-                >
-                  {assignMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-600">Assign Auditor</label>
+                <div className="flex gap-2">
+                  {users && users.length > 0 ? (
+                    <select
+                      value={newAuditorId}
+                      onChange={(e) => setNewAuditorId(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500 bg-white"
+                    >
+                      <option value="">Select Auditor...</option>
+                      {users.map((u: any) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name} ({u.role})
+                        </option>
+                      ))}
+                    </select>
                   ) : (
-                    <Plus className="h-4 w-4" />
+                    <input
+                      type="number"
+                      placeholder="Enter Auditor User ID"
+                      value={newAuditorId}
+                      onChange={(e) => setNewAuditorId(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500"
+                    />
                   )}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={assignMutation.isPending}
+                    className="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center cursor-pointer shadow-xs"
+                  >
+                    {assignMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          )}
         </div>
       </div>
     </div>
