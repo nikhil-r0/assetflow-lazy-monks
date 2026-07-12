@@ -92,6 +92,15 @@ Log in at `http://localhost:5173` with any of the following seeded accounts. **P
 | `employee@assetflow.dev` (Priya) | Employee |
 | `sales@assetflow.dev` (Raj) | Employee |
 
+### Troubleshooting / Common Issues
+
+If you see an error about `@prisma/client` missing an export or not being found when running `npm run seed` or `npm run dev`, it means the Prisma Client wasn't generated. You can fix this by running:
+
+```bash
+cd backend
+npx prisma generate
+```
+
 ---
 
 ## 📚 Documentation Reference
