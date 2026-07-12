@@ -103,6 +103,42 @@ npx prisma generate
 
 ---
 
+## 🖼️ Screens
+
+Screenshots live in [`docs/screenshots/`](docs/screenshots/).
+
+### 1. Dashboard
+![Dashboard](docs/screenshots/dashboard.jpeg)
+
+### 2. Assets
+![Assets](docs/screenshots/assets.jpeg)
+
+### 3. Allocations
+![Allocations](docs/screenshots/allocations.jpeg)
+
+### 4. Bookings
+![Bookings](docs/screenshots/bookings.jpeg)
+
+### 5. Maintenance
+![Maintenance](docs/screenshots/maintenance.jpeg)
+
+### 6. Audit Cycles
+![Audit Cycles](docs/screenshots/audit-cycles.jpeg)
+
+### 7. Reports
+![Reports](docs/screenshots/reports.jpeg)
+
+### 8. Notifications
+![Notifications](docs/screenshots/notifications.jpeg)
+
+### 9. Activity Logs
+![Activity Logs](docs/screenshots/activity-logs.jpeg)
+
+### 10. Org Setup
+![Org Setup](docs/screenshots/org-setup.jpeg)
+
+---
+
 ## 📚 Documentation Reference
 
 For developers and agents working on the repository, refer to the following internal documentation:
