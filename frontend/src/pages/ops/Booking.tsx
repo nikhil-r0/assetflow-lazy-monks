@@ -3,7 +3,7 @@
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { apiClient } from "../../api/client";
-import { BookingCalendar, type CalendarBooking } from "../../components/BookingCalendar";
+import { BookingCalendar, toLocalInput, type CalendarBooking } from "../../components/BookingCalendar";
 
 type BookingState = "idle" | "loading" | "error" | "overlap" | "success";
 
@@ -198,8 +198,8 @@ export function BookingPage() {
             const b = bookings.find((x) => x.id === id);
             setRescheduleId(id);
             if (b) {
-              setStartTime(b.start_time.slice(0, 16));
-              setEndTime(b.end_time.slice(0, 16));
+              setStartTime(toLocalInput(b.start_time));
+              setEndTime(toLocalInput(b.end_time));
             }
           }}
         />

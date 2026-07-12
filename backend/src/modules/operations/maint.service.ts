@@ -47,6 +47,11 @@ export const maintService = {
       if (!row) throw new NotFoundError("Maintenance request not found");
       assertMaintTransition(row.status as MaintStatus, MaintStatus.approved);
 
+      // Serialize concurrent approves on the same asset (Rule 3).
+      await tx.$queryRaw`
+        SELECT id FROM assets WHERE id = ${row.asset_id} FOR UPDATE
+      `;
+
       const result = await tx.maintenance_requests.updateMany({
         where: { id, status: MaintStatus.pending },
         data: { status: MaintStatus.approved, approved_by: actor.id },

@@ -207,10 +207,19 @@ export const bookingService = {
       ]);
     }
 
-    const updated = await prisma.bookings.update({
-      where: { id },
+    const result = await prisma.bookings.updateMany({
+      where: {
+        id,
+        status: { in: [BookingStatus.upcoming, BookingStatus.ongoing] },
+      },
       data: { status: BookingStatus.cancelled },
     });
+    if (result.count === 0) {
+      throw new AppError("UNPROCESSABLE", 422, "Booking cannot be cancelled", [
+        { field: "status", issue: "illegal_transition" },
+      ]);
+    }
+    const updated = await prisma.bookings.findUniqueOrThrow({ where: { id } });
 
     await createNotification(
       row.booked_by_user_id,
@@ -269,14 +278,23 @@ export const bookingService = {
         throw overlapError(clash.id);
       }
 
-      return tx.bookings.update({
-        where: { id },
+      const result = await tx.bookings.updateMany({
+        where: { id, status: BookingStatus.upcoming },
         data: {
           start_time: start,
           end_time: end,
           reminder_sent: false,
         },
       });
+      if (result.count === 0) {
+        throw new AppError(
+          "UNPROCESSABLE",
+          422,
+          "Only upcoming bookings can be rescheduled",
+          [{ field: "status", issue: "must_be_upcoming" }],
+        );
+      }
+      return tx.bookings.findUniqueOrThrow({ where: { id } });
     });
 
     await logActivity(actor.id, ACT.CREATE_BOOKING, "booking", id, {
@@ -303,19 +321,24 @@ export const bookingService = {
 
     let reminded = 0;
     for (const row of due) {
+      try {
+        await prisma.notifications.create({
+          data: {
+            user_id: row.booked_by_user_id,
+            type: NOTIF.BOOKING_REMINDER,
+            message: `Reminder: booking #${row.id} starts soon`,
+            related_entity_type: "booking",
+            related_entity_id: row.id,
+          },
+        });
+      } catch {
+        continue;
+      }
       const result = await prisma.bookings.updateMany({
         where: { id: row.id, reminder_sent: false },
         data: { reminder_sent: true },
       });
       if (result.count === 0) continue;
-
-      await createNotification(
-        row.booked_by_user_id,
-        NOTIF.BOOKING_REMINDER,
-        `Reminder: booking #${row.id} starts soon`,
-        "booking",
-        row.id,
-      );
       reminded += 1;
     }
     return { reminded };
