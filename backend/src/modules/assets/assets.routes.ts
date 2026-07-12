@@ -166,7 +166,7 @@ assetsRouter.post(
 allocationsRouter.post(
   "/",
   requireAuth,
-  requireRole(Role.admin, Role.asset_manager),
+  requireRole(Role.admin, Role.asset_manager, Role.department_head),
   async (req, res, next) => {
     try {
       const parsed = allocateAssetSchema.safeParse(req.body);
@@ -178,7 +178,11 @@ allocationsRouter.post(
           })),
         ]);
       }
-      const allocation = await assetService.allocate(parsed.data, req.user!.id);
+      const allocation = await assetService.allocate(parsed.data, {
+        id: req.user!.id,
+        role: req.user!.role,
+        department_id: req.user!.department_id,
+      });
       res.status(201).json(allocation);
     } catch (err) {
       next(err);

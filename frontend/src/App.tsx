@@ -42,51 +42,41 @@ import AuditCycle from "./pages/insights/AuditCycle";
 import Notifications from "./pages/insights/Notifications";
 import ActivityLogs from "./pages/insights/ActivityLogs";
 import Reports from "./pages/insights/Reports";
-const NAV = [
-  {
-    to: "/dashboard",
-    icon: LayoutDashboard,
-    label: "Dashboard",
-  },
-  {
-    to: "/bookings",
-    icon: CalendarDays,
-    label: "Bookings",
-  },
-  {
-    to: "/maintenance",
-    icon: Wrench,
-    label: "Maintenance",
-  },
+type NavItem = {
+  to: string;
+  icon: typeof LayoutDashboard;
+  label: string;
+  /** If set, only these roles see the link. Omit = all authenticated. */
+  roles?: string[];
+};
+
+const NAV: NavItem[] = [
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/bookings", icon: CalendarDays, label: "Bookings" },
+  { to: "/maintenance", icon: Wrench, label: "Maintenance" },
   {
     to: "/audit",
     icon: ClipboardList,
     label: "Audit Cycles",
+    roles: ["admin", "asset_manager"],
   },
   {
     to: "/reports",
     icon: BarChart3,
     label: "Reports",
+    roles: ["admin", "asset_manager", "department_head"],
   },
-  {
-    to: "/notifications",
-    icon: Bell,
-    label: "Notifications",
-  },
-  {
-    to: "/activity-logs",
-    icon: Activity,
-    label: "Activity Logs",
-  },
-  {
-    to: "/org",
-    icon: Settings,
-    label: "Org Setup",
-  },
+  { to: "/notifications", icon: Bell, label: "Notifications" },
+  { to: "/activity-logs", icon: Activity, label: "Activity Logs" },
+  { to: "/org", icon: Settings, label: "Org Setup", roles: ["admin"] },
 ];
 
 const Layout = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const role = user?.role;
+  const navItems = NAV.filter(
+    (item) => !item.roles || (role != null && item.roles.includes(role)),
+  );
 
   return (
     <div
@@ -100,13 +90,11 @@ const Layout = () => {
             Asset<span className="text-gray-900">Flow</span>
           </span>
 
-          <p className="mt-0.5 text-xs text-gray-400">
-            Insights Module · Phase 1
-          </p>
+          <p className="mt-0.5 text-xs text-gray-400">AssetFlow</p>
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-          {NAV.map(({ to, icon: Icon, label }) => (
+          {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
