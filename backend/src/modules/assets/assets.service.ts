@@ -1,9 +1,9 @@
-import { Prisma } from "@prisma/client";
 import {
   ACT,
   AllocStatus,
   AssetStatus,
   NOTIF,
+  Role,
 } from "../../shared/enums.js";
 import { AppError, NotFoundError } from "../../shared/errors.js";
 import { logActivity } from "../../shared/activity.js";
@@ -21,6 +21,12 @@ import type {
   UpdateAssetInput,
 } from "./assets.schema.js";
 import { canTransition } from "./assetStatus.js";
+
+type AllocateActor = {
+  id: number;
+  role: Role;
+  department_id: number | null;
+};
 
 async function loadCategoryFields(categoryId: number) {
   const category = await prisma.asset_categories.findUnique({
@@ -326,10 +332,41 @@ export const assetService = {
     return updated;
   },
 
-  async allocate(input: AllocateAssetInput, actorId: number) {
+  async allocate(input: AllocateAssetInput, actor: AllocateActor) {
     return prisma.$transaction(async (tx) => {
       const asset = await tx.assets.findUnique({ where: { id: input.asset_id } });
       if (!asset) throw new NotFoundError("Asset not found");
+
+      if (actor.role === Role.department_head) {
+        if (actor.department_id == null) {
+          throw new AppError(
+            "FORBIDDEN",
+            403,
+            "Department head has no department assigned",
+            [{ field: "department_id", issue: "required" }],
+          );
+        }
+        if (input.department_id != null && input.department_id !== actor.department_id) {
+          throw new AppError(
+            "FORBIDDEN",
+            403,
+            "Department head can only allocate within own department",
+            [{ field: "department_id", issue: "outside_dept" }],
+          );
+        }
+        if (input.employee_id != null) {
+          const target = await tx.users.findUnique({ where: { id: input.employee_id } });
+          if (!target) throw new NotFoundError("Employee not found");
+          if (target.department_id !== actor.department_id) {
+            throw new AppError(
+              "FORBIDDEN",
+              403,
+              "Department head can only allocate to employees in own department",
+              [{ field: "employee_id", issue: "outside_dept" }],
+            );
+          }
+        }
+      }
 
       const active = await tx.allocations.findFirst({
         where: {
@@ -406,7 +443,7 @@ export const assetService = {
           allocation.id,
         );
       }
-      await logActivity(actorId, ACT.ALLOCATE_ASSET, "allocation", allocation.id, {
+      await logActivity(actor.id, ACT.ALLOCATE_ASSET, "allocation", allocation.id, {
         asset_id: input.asset_id,
       });
 

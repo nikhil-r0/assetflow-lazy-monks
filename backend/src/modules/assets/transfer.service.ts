@@ -47,6 +47,16 @@ export const transferService = {
       ]);
     }
 
+    // §0.8: employees may only initiate transfer for assets they hold
+    if (actor.role === Role.employee && active.employee_id !== actor.id) {
+      throw new AppError(
+        "FORBIDDEN",
+        403,
+        "Employees can only request transfer for assets they hold",
+        [{ field: "asset_id", issue: "not_holder" }],
+      );
+    }
+
     const created = await prisma.transfer_requests.create({
       data: {
         asset_id: input.asset_id,

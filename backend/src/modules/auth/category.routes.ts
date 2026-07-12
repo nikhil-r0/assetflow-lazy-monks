@@ -1,18 +1,42 @@
 import { Router } from "express";
 import { categoryService } from "./category.service.js";
-import { createCategorySchema, updateCategorySchema, createCustomFieldSchema } from "./category.schema.js";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+  createCustomFieldSchema,
+} from "./category.schema.js";
 import { requireAuth, requireRole } from "../../shared/auth.js";
+import { ACT, Role } from "../../shared/enums.js";
 import { AppError } from "../../shared/errors.js";
+import { logActivity } from "../../shared/activity.js";
 
 export const categoryRoutes = Router();
 
-categoryRoutes.post("/", requireAuth, requireRole("admin"), async (req, res, next) => {
+function zodDetails(error: { issues: Array<{ path: PropertyKey[]; message: string }> }) {
+  return error.issues.map((i) => ({
+    field: i.path.join(".") || "body",
+    issue: i.message,
+  }));
+}
+
+function parseId(raw: string | string[] | undefined, field = "id"): number {
+  const n = Number(Array.isArray(raw) ? raw[0] : raw);
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new AppError("VALIDATION_ERROR", 422, `Invalid ${field}`, [
+      { field, issue: "invalid" },
+    ]);
+  }
+  return n;
+}
+
+categoryRoutes.post("/", requireAuth, requireRole(Role.admin), async (req, res, next) => {
   try {
     const parsed = createCategorySchema.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", parsed.error.errors);
+      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", zodDetails(parsed.error));
     }
     const category = await categoryService.createCategory(parsed.data);
+    await logActivity(req.user!.id, ACT.CREATE_CATEGORY, "asset_categories", category.id);
     res.status(201).json(category);
   } catch (error) {
     next(error);
@@ -28,16 +52,13 @@ categoryRoutes.get("/", requireAuth, async (req, res, next) => {
   }
 });
 
-categoryRoutes.patch("/:id", requireAuth, requireRole("admin"), async (req, res, next) => {
+categoryRoutes.patch("/:id", requireAuth, requireRole(Role.admin), async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) throw new AppError("VALIDATION_ERROR", 422, "Invalid category ID");
-
+    const id = parseId(req.params.id);
     const parsed = updateCategorySchema.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", parsed.error.errors);
+      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", zodDetails(parsed.error));
     }
-
     const updated = await categoryService.updateCategory(id, parsed.data);
     res.status(200).json(updated);
   } catch (error) {
@@ -45,11 +66,9 @@ categoryRoutes.patch("/:id", requireAuth, requireRole("admin"), async (req, res,
   }
 });
 
-categoryRoutes.delete("/:id", requireAuth, requireRole("admin"), async (req, res, next) => {
+categoryRoutes.delete("/:id", requireAuth, requireRole(Role.admin), async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) throw new AppError("VALIDATION_ERROR", 422, "Invalid category ID");
-
+    const id = parseId(req.params.id);
     await categoryService.deleteCategory(id);
     res.status(204).send();
   } catch (error) {
@@ -57,16 +76,13 @@ categoryRoutes.delete("/:id", requireAuth, requireRole("admin"), async (req, res
   }
 });
 
-categoryRoutes.post("/:id/fields", requireAuth, requireRole("admin"), async (req, res, next) => {
+categoryRoutes.post("/:id/fields", requireAuth, requireRole(Role.admin), async (req, res, next) => {
   try {
-    const categoryId = parseInt(req.params.id, 10);
-    if (isNaN(categoryId)) throw new AppError("VALIDATION_ERROR", 422, "Invalid category ID");
-
+    const categoryId = parseId(req.params.id, "categoryId");
     const parsed = createCustomFieldSchema.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", parsed.error.errors);
+      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", zodDetails(parsed.error));
     }
-
     const field = await categoryService.createCustomField(categoryId, parsed.data);
     res.status(201).json(field);
   } catch (error) {
@@ -74,15 +90,18 @@ categoryRoutes.post("/:id/fields", requireAuth, requireRole("admin"), async (req
   }
 });
 
-categoryRoutes.delete("/:categoryId/fields/:fieldId", requireAuth, requireRole("admin"), async (req, res, next) => {
-  try {
-    const categoryId = parseInt(req.params.categoryId, 10);
-    const fieldId = parseInt(req.params.fieldId, 10);
-    if (isNaN(categoryId) || isNaN(fieldId)) throw new AppError("VALIDATION_ERROR", 422, "Invalid ID");
-
-    await categoryService.deleteCustomField(categoryId, fieldId);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
-});
+categoryRoutes.delete(
+  "/:categoryId/fields/:fieldId",
+  requireAuth,
+  requireRole(Role.admin),
+  async (req, res, next) => {
+    try {
+      const categoryId = parseId(req.params.categoryId, "categoryId");
+      const fieldId = parseId(req.params.fieldId, "fieldId");
+      await categoryService.deleteCustomField(categoryId, fieldId);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
+);

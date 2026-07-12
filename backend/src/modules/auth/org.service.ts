@@ -1,4 +1,4 @@
-import { DeptStatus, Prisma } from "@prisma/client";
+import { DeptStatus, Prisma, Role, UserStatus } from "@prisma/client";
 import { prisma } from "../../prismaClient.js";
 import { AppError, NotFoundError } from "../../shared/errors.js";
 import { buildEnvelope, parsePagination } from "../../shared/pagination.js";
@@ -216,6 +216,24 @@ export class OrgService {
     ]);
 
     return buildEnvelope(items, total, page, pageSize);
+  }
+
+  async getAssignableHeads() {
+    return prisma.users.findMany({
+      where: {
+        status: UserStatus.active,
+        role: { in: [Role.admin, Role.asset_manager, Role.department_head, Role.employee] },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        department_id: true,
+      },
+      orderBy: { name: "asc" },
+      take: 200,
+    });
   }
 
   async updateUserRole(id: number, newRole: Role, currentUserId: number) {
