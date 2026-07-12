@@ -79,7 +79,7 @@ export class OrgService {
       include: {
         head_user: { select: { id: true, name: true } },
         parent_department: { select: { id: true, name: true } },
-        _count: { select: { users_users_department_idTodepartments: true } },
+        _count: { select: { users: true } },
       },
     });
 
@@ -90,7 +90,7 @@ export class OrgService {
     // Standardize _count format to match spec "member count" if needed, though raw is fine
     return {
       ...dept,
-      memberCount: dept._count.users_users_department_idTodepartments,
+      memberCount: dept._count.users,
       _count: undefined,
     };
   }
@@ -137,10 +137,11 @@ export class OrgService {
         if (currentParentId === id) {
           throw new AppError("UNPROCESSABLE", 422, "Circular hierarchy detected");
         }
-        const currentParent = await prisma.departments.findUnique({
-          where: { id: currentParentId },
-          select: { parent_department_id: true },
-        });
+        const currentParent: { parent_department_id: number | null } | null =
+          await prisma.departments.findUnique({
+            where: { id: currentParentId },
+            select: { parent_department_id: true },
+          });
         if (!currentParent) break;
         currentParentId = currentParent.parent_department_id;
         depth++;

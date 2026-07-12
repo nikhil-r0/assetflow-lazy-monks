@@ -11,7 +11,8 @@
     "dev": "tsx watch src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npx prisma validate && npx prisma migrate deploy && npm run test"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
