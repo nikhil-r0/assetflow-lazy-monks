@@ -116,15 +116,15 @@ export default function Reports() {
   ];
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in bg-slate-50/20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-150 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-150 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
             <FileBarChart className="h-8 w-8 text-purple-600" />
             Reports &amp; Analytics
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-sm text-slate-500 mt-1.5 font-medium">
             Real-time utilization metrics, maintenance records, and inventory analytics.
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function Reports() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleExport("asset-utilization")}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition shadow-sm"
+              className="premium-btn-secondary py-2"
             >
               <Download className="h-4 w-4" />
               Export CSV
@@ -144,33 +144,33 @@ export default function Reports() {
       </div>
 
       {/* Tabs list */}
-      <div className="flex border-b border-gray-200 overflow-x-auto pb-px">
+      <div className="flex border-b border-slate-200 overflow-x-auto pb-px gap-2">
         <button
           onClick={() => setActiveTab("utilization")}
-          className={`px-5 py-3 border-b-2 text-sm font-semibold whitespace-nowrap transition-all ${
+          className={`px-4 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
             activeTab === "utilization"
-              ? "border-purple-600 text-purple-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "bg-purple-50 text-purple-700 border border-purple-100/50"
+              : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
           }`}
         >
           Asset Utilization
         </button>
         <button
           onClick={() => setActiveTab("maintenance")}
-          className={`px-5 py-3 border-b-2 text-sm font-semibold whitespace-nowrap transition-all ${
+          className={`px-4 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
             activeTab === "maintenance"
-              ? "border-purple-600 text-purple-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "bg-purple-50 text-purple-700 border border-purple-100/50"
+              : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
           }`}
         >
           Maintenance Frequency
         </button>
         <button
           onClick={() => setActiveTab("heatmap")}
-          className={`px-5 py-3 border-b-2 text-sm font-semibold whitespace-nowrap transition-all ${
+          className={`px-4 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
             activeTab === "heatmap"
-              ? "border-purple-600 text-purple-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "bg-purple-50 text-purple-700 border border-purple-100/50"
+              : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
           }`}
         >
           Booking Heatmap
@@ -180,20 +180,20 @@ export default function Reports() {
           <>
             <button
               onClick={() => setActiveTab("due-attention")}
-              className={`px-5 py-3 border-b-2 text-sm font-semibold whitespace-nowrap transition-all ${
+              className={`px-4 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                 activeTab === "due-attention"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "bg-purple-50 text-purple-700 border border-purple-100/50"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
               }`}
             >
               Due for Attention
             </button>
             <button
               onClick={() => setActiveTab("department")}
-              className={`px-5 py-3 border-b-2 text-sm font-semibold whitespace-nowrap transition-all ${
+              className={`px-4 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                 activeTab === "department"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "bg-purple-50 text-purple-700 border border-purple-100/50"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
               }`}
             >
               Department Allocations
@@ -206,26 +206,29 @@ export default function Reports() {
       <div className="space-y-6">
         {/* Tab 1: Asset Utilization */}
         {activeTab === "utilization" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+          <div className="premium-card p-6 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h2 className="text-xl font-bold text-gray-900">Asset Utilization</h2>
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Asset Utilization</h2>
+                <p className="text-xs text-slate-400 mt-1 font-medium">Tracks total checkout frequency and total allocated duration.</p>
+              </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <div className="relative min-w-[220px]">
+                  <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Search by tag or name..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="premium-input pl-10 py-2 text-xs"
                   />
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer bg-gray-50 px-3 py-2 rounded-xl hover:bg-gray-100 transition">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-650 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl hover:bg-slate-100 transition">
                   <input
                     type="checkbox"
                     checked={idleOnly}
                     onChange={(e) => setIdleOnly(e.target.checked)}
-                    className="rounded text-purple-600 focus:ring-purple-500 border-gray-300"
+                    className="rounded text-purple-600 focus:ring-purple-500 border-slate-300"
                   />
                   <span>Idle assets only</span>
                 </label>
@@ -233,17 +236,17 @@ export default function Reports() {
             </div>
 
             {utilizationQuery.isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-2" />
-                <p className="text-sm">Loading utilization data...</p>
+                <p className="text-xs font-medium">Loading utilization data...</p>
               </div>
             ) : filteredUtilization.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">No assets found matching the filters.</div>
+              <div className="text-center py-12 text-slate-400 text-sm font-medium">No assets found matching the filters.</div>
             ) : (
-              <div className="overflow-x-auto border border-gray-100 rounded-xl">
-                <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider border-b border-gray-150">
+                    <tr className="bg-slate-50/70 text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
                       <th className="p-4">Asset Tag</th>
                       <th className="p-4">Asset Name</th>
                       <th className="p-4 text-center">Allocations</th>
@@ -251,20 +254,20 @@ export default function Reports() {
                       <th className="p-4 text-center">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                  <tbody className="divide-y divide-slate-100 text-slate-700 font-sans">
                     {filteredUtilization.map((item: any) => (
-                      <tr key={item.asset_id} className="hover:bg-gray-50 transition">
-                        <td className="p-4 font-mono font-semibold text-purple-600">{item.asset_tag}</td>
-                        <td className="p-4 font-medium text-gray-900">{item.name}</td>
-                        <td className="p-4 text-center">{item.allocation_count}</td>
+                      <tr key={item.asset_id} className="hover:bg-slate-50/50 transition">
+                        <td className="p-4 font-mono font-semibold text-purple-650">{item.asset_tag}</td>
+                        <td className="p-4 font-bold text-slate-900">{item.name}</td>
+                        <td className="p-4 text-center font-mono">{item.allocation_count}</td>
                         <td className="p-4 text-center font-semibold">{item.days_allocated} days</td>
                         <td className="p-4 text-center">
                           {item.is_idle ? (
-                            <span className="inline-flex px-2 py-1 text-xs font-bold bg-amber-50 text-amber-700 rounded-full border border-amber-200">
+                            <span className="inline-flex px-2.5 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 rounded-full border border-amber-250 font-mono">
                               Idle
                             </span>
                           ) : (
-                            <span className="inline-flex px-2 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+                            <span className="inline-flex px-2.5 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 font-mono">
                               Active
                             </span>
                           )}
@@ -280,59 +283,73 @@ export default function Reports() {
 
         {/* Tab 2: Maintenance Frequency */}
         {activeTab === "maintenance" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* By category chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-              <h3 className="text-lg font-bold text-gray-900">Requests by Asset Category</h3>
+          <div className="space-y-8">
+            <div className="premium-card p-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Maintenance Events by Category</h2>
+                <p className="text-xs text-slate-400 mt-1 font-medium">Categorized breakdown of all ticket frequencies.</p>
+              </div>
+
               {maintenanceQuery.isLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-purple-600" /></div>
+                <div className="flex flex-col items-center justify-center py-12 text-slate-450">
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-2" />
+                  <p className="text-xs font-semibold">Loading ticket data...</p>
+                </div>
               ) : (maintenanceQuery.data?.by_category || []).length === 0 ? (
-                <div className="text-center py-12 text-gray-500">No maintenance data available.</div>
+                <div className="text-center py-12 text-slate-400 text-sm font-medium">No maintenance records found.</div>
               ) : (
                 <div className="space-y-4">
-                  {(maintenanceQuery.data.by_category || []).map((cat: any) => (
-                    <div key={cat.category} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-semibold text-gray-700">{cat.category}</span>
-                        <span className="font-bold text-purple-600">{cat.request_count} requests</span>
+                  {(maintenanceQuery.data?.by_category || []).map((cat: any) => {
+                    const maxCount = Math.max(...(maintenanceQuery.data?.by_category || []).map((c: any) => c.request_count));
+                    const percent = maxCount > 0 ? Math.round((cat.request_count / maxCount) * 100) : 0;
+                    return (
+                      <div key={cat.category} className="space-y-2">
+                        <div className="flex justify-between text-xs font-bold text-slate-700">
+                          <span className="capitalize">{cat.category}</span>
+                          <span className="font-mono text-slate-500">{cat.request_count} requests ({percent}%)</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/55">
+                          <div
+                            className="bg-purple-600 h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-purple-600 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(100, (cat.request_count / Math.max(...maintenanceQuery.data.by_category.map((c: any) => c.request_count))) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Top requested assets */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-              <h3 className="text-lg font-bold text-gray-900">Highest Maintenance Assets</h3>
+            <div className="premium-card p-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Highest Maintenance Assets</h2>
+                <p className="text-xs text-slate-400 mt-1 font-medium">Top 5 assets sorted by total repair ticket count.</p>
+              </div>
+
               {maintenanceQuery.isLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-purple-600" /></div>
+                <div className="flex flex-col items-center justify-center py-12 text-slate-450">
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-2" />
+                  <p className="text-xs font-semibold">Loading top assets...</p>
+                </div>
               ) : (maintenanceQuery.data?.by_asset || []).length === 0 ? (
-                <div className="text-center py-12 text-gray-500">No maintenance reports found.</div>
+                <div className="text-center py-12 text-slate-400 text-sm font-medium">No maintenance reports found.</div>
               ) : (
-                <div className="overflow-x-auto border border-gray-100 rounded-xl">
-                  <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                  <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider border-b border-gray-150">
-                        <th className="p-3">Asset Tag</th>
-                        <th className="p-3">Name</th>
-                        <th className="p-3 text-center">Requests</th>
+                      <tr className="bg-slate-50/70 text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
+                        <th className="p-4">Asset Tag</th>
+                        <th className="p-4">Asset Name</th>
+                        <th className="p-4 text-center">Requests</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
-                      {maintenanceQuery.data.by_asset.slice(0, 5).map((asset: any) => (
-                        <tr key={asset.asset_id} className="hover:bg-gray-50 transition">
-                          <td className="p-3 font-mono font-semibold text-purple-600">{asset.asset_tag}</td>
-                          <td className="p-3 font-medium text-gray-900">{asset.name}</td>
-                          <td className="p-3 text-center font-bold text-red-600">{asset.request_count}</td>
+                    <tbody className="divide-y divide-slate-100 text-slate-700 font-sans">
+                      {(maintenanceQuery.data?.by_asset || []).slice(0, 5).map((asset: any) => (
+                        <tr key={asset.asset_id} className="hover:bg-slate-50/50 transition">
+                          <td className="p-4 font-mono font-semibold text-purple-650">{asset.asset_tag}</td>
+                          <td className="p-4 font-bold text-slate-900">{asset.name}</td>
+                          <td className="p-4 text-center font-mono font-bold text-red-600">{asset.request_count}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -343,32 +360,36 @@ export default function Reports() {
           </div>
         )}
 
+
         {/* Tab 3: Booking Heatmap */}
         {activeTab === "heatmap" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+          <div className="premium-card p-6 space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Booking Density Heatmap</h2>
-              <p className="text-sm text-gray-500 mt-1">Peak booking traffic analyzed by day of week and hour of day.</p>
+              <h2 className="text-xl font-extrabold text-slate-900">Booking Density Heatmap</h2>
+              <p className="text-xs text-slate-400 mt-1 font-medium font-sans">Peak booking traffic analyzed by day of week and hour of day.</p>
             </div>
 
             {heatmapQuery.isLoading ? (
-              <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-purple-600" /></div>
+              <div className="flex flex-col items-center justify-center py-12 text-slate-450">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-2" />
+                <p className="text-xs font-semibold">Loading booking data...</p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
-                <div className="min-w-[800px] space-y-2">
+                <div className="min-w-[800px] space-y-3 p-1">
                   {/* Hours Header */}
-                  <div className="grid grid-cols-25 text-xs text-gray-400 font-semibold text-center border-b border-gray-100 pb-2">
+                  <div className="grid grid-cols-25 text-[10px] text-slate-400 font-bold text-center border-b border-slate-100 pb-3 font-mono">
                     <div></div>
                     {Array.from({ length: 24 }).map((_, hour) => (
-                      <div key={hour}>{String(hour).padStart(2, "0")}</div>
+                      <div key={hour} className="uppercase">{String(hour).padStart(2, "0")}h</div>
                     ))}
                   </div>
 
                   {/* Weekday Grid */}
                   {weekdays.map((dayName, dayIndex) => {
                     return (
-                      <div key={dayName} className="grid grid-cols-25 items-center gap-1">
-                        <div className="text-xs font-bold text-gray-500 text-right pr-3 select-none">{dayName.slice(0, 3)}</div>
+                      <div key={dayName} className="grid grid-cols-25 items-center gap-1.5">
+                        <div className="text-[10px] font-extrabold text-slate-500 text-right pr-4 select-none uppercase tracking-wider font-mono">{dayName.slice(0, 3)}</div>
                         {Array.from({ length: 24 }).map((_, hour) => {
                           const bucket = (heatmapQuery.data || []).find(
                             (b: any) => b.weekday === dayIndex && b.hour === hour
@@ -376,24 +397,24 @@ export default function Reports() {
                           const count = bucket?.count || 0;
 
                           // Heatmap color intensity levels
-                          let bgColor = "bg-gray-50";
-                          let textColor = "text-gray-400";
+                          let bgColor = "bg-slate-50 border border-slate-100";
+                          let textColor = "text-slate-400";
                           if (count > 0 && count <= 2) {
-                            bgColor = "bg-purple-100";
-                            textColor = "text-purple-700";
+                            bgColor = "bg-purple-50 border border-purple-100/50";
+                            textColor = "text-purple-700 font-semibold";
                           } else if (count > 2 && count <= 5) {
-                            bgColor = "bg-purple-300";
-                            textColor = "text-purple-900 font-bold";
+                            bgColor = "bg-purple-150 border border-purple-200/50";
+                            textColor = "text-purple-900 font-extrabold";
                           } else if (count > 5) {
-                            bgColor = "bg-purple-600";
-                            textColor = "text-white font-bold";
+                            bgColor = "bg-purple-600 border border-purple-700";
+                            textColor = "text-white font-extrabold";
                           }
 
                           return (
                             <div
                               key={hour}
                               title={`${dayName} at ${hour}:00 - ${count} bookings`}
-                              className={`aspect-square flex items-center justify-center text-[10px] rounded transition duration-200 ${bgColor} ${textColor} hover:scale-110 cursor-help`}
+                              className={`aspect-square flex items-center justify-center text-[10px] rounded-lg transition-all duration-200 ${bgColor} ${textColor} hover:scale-110 cursor-help font-mono`}
                             >
                               {count || ""}
                             </div>
@@ -412,16 +433,19 @@ export default function Reports() {
         {activeTab === "due-attention" && isManager && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Aged assets */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-amber-500" />
-                  Nearing Retirement (Aged Assets)
-                </h3>
+            <div className="premium-card p-6 space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                    Nearing Retirement (Aged Assets)
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-1 font-medium">* Aged assets exceeding lifecycle based on acquisition.</p>
+                </div>
                 <select
                   value={yearsThreshold}
                   onChange={(e) => setYearsThreshold(e.target.value)}
-                  className="px-3 py-1 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none"
+                  className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none bg-white cursor-pointer"
                 >
                   <option value="3">3+ years old</option>
                   <option value="5">5+ years old</option>
@@ -430,20 +454,23 @@ export default function Reports() {
               </div>
 
               {dueAttentionQuery.isLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-purple-600" /></div>
+                <div className="flex flex-col items-center justify-center py-12 text-slate-450">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-600 mb-2" />
+                  <p className="text-xs font-semibold">Loading aged assets...</p>
+                </div>
               ) : (dueAttentionQuery.data?.aged_assets || []).length === 0 ? (
-                <div className="text-center py-12 text-gray-500">No aged assets matching the filter.</div>
+                <div className="text-center py-12 text-slate-400 text-sm font-medium">No aged assets matching the filter.</div>
               ) : (
                 <div className="space-y-3">
                   {dueAttentionQuery.data.aged_assets.map((asset: any) => (
-                    <div key={asset.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+                    <div key={asset.id} className="flex items-center justify-between p-3 border border-slate-100 hover:border-purple-100 rounded-xl bg-slate-50/20 hover:bg-slate-50 transition">
                       <div>
-                        <span className="font-mono text-xs font-bold text-purple-600 block">{asset.asset_tag}</span>
-                        <span className="font-bold text-gray-900 text-sm">{asset.name}</span>
+                        <span className="font-mono text-xs font-bold text-purple-750 block">{asset.asset_tag}</span>
+                        <span className="font-bold text-slate-950 text-xs">{asset.name}</span>
                       </div>
                       <div className="text-right text-xs">
-                        <span className="text-gray-500 block">Acquired: {new Date(asset.acquisition_date).toLocaleDateString()}</span>
-                        <span className="inline-block mt-1 font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        <span className="text-slate-400 block text-[10px] font-medium">Acquired: {new Date(asset.acquisition_date).toLocaleDateString()}</span>
+                        <span className="inline-block mt-1.5 font-mono font-bold text-[9px] uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                           {asset.status}
                         </span>
                       </div>
@@ -454,25 +481,31 @@ export default function Reports() {
             </div>
 
             {/* High maintenance assets */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5 text-red-500" />
-                Fragile Assets (High Maintenance Frequency)
-              </h3>
+            <div className="premium-card p-6 space-y-6">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <ShieldAlert className="h-5 w-5 text-red-500" />
+                  Fragile Assets (High Maintenance Frequency)
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-1 font-medium">* Assets requiring frequent repair operations (over 3 events).</p>
+              </div>
 
               {dueAttentionQuery.isLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-purple-600" /></div>
+                <div className="flex flex-col items-center justify-center py-12 text-slate-450">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-600 mb-2" />
+                  <p className="text-xs font-semibold">Loading fragile assets...</p>
+                </div>
               ) : (dueAttentionQuery.data?.high_maintenance || []).length === 0 ? (
-                <div className="text-center py-12 text-gray-500">No assets with frequent maintenance issues.</div>
+                <div className="text-center py-12 text-slate-400 text-sm font-medium">No assets with frequent maintenance issues.</div>
               ) : (
                 <div className="space-y-3">
                   {dueAttentionQuery.data.high_maintenance.map((asset: any) => (
-                    <div key={asset.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+                    <div key={asset.id} className="flex items-center justify-between p-3 border border-slate-100 hover:border-purple-100 rounded-xl bg-slate-50/20 hover:bg-slate-50 transition">
                       <div>
-                        <span className="font-mono text-xs font-bold text-purple-600 block">{asset.asset_tag}</span>
-                        <span className="font-bold text-gray-900 text-sm">{asset.name}</span>
+                        <span className="font-mono text-xs font-bold text-purple-750 block">{asset.asset_tag}</span>
+                        <span className="font-bold text-slate-950 text-xs">{asset.name}</span>
                       </div>
-                      <span className="text-xs font-semibold text-red-700 bg-red-50 px-2.5 py-1 rounded-full border border-red-200">
+                      <span className="text-[9px] font-mono font-bold text-red-750 bg-red-50 px-2.5 py-1 rounded-full border border-red-200 uppercase">
                         {asset.reason}
                       </span>
                     </div>
@@ -485,31 +518,37 @@ export default function Reports() {
 
         {/* Tab 5: Department Allocations */}
         {activeTab === "department" && isManager && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Users className="h-6 w-6 text-purple-600" />
-              Department Allocations &amp; Value Distribution
-            </h2>
+          <div className="premium-card p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                <Users className="h-6 w-6 text-purple-600" />
+                Department Allocations &amp; Value Distribution
+              </h2>
+              <p className="text-xs text-slate-400 mt-1 font-medium font-sans">Financial distribution and check-out metrics across different corporate divisions.</p>
+            </div>
 
             {departmentQuery.isLoading ? (
-              <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-purple-600" /></div>
+              <div className="flex flex-col items-center justify-center py-12 text-slate-450">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-2" />
+                <p className="text-xs font-semibold">Loading department allocations...</p>
+              </div>
             ) : (departmentQuery.data || []).length === 0 ? (
-              <div className="text-center py-12 text-gray-500">No department allocation data.</div>
+              <div className="text-center py-12 text-slate-450 text-sm font-medium">No department allocation data.</div>
             ) : (
-              <div className="overflow-x-auto border border-gray-100 rounded-xl">
-                <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider border-b border-gray-150">
+                    <tr className="bg-slate-50/70 text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
                       <th className="p-4">Department Name</th>
                       <th className="p-4 text-center">Active Allocations</th>
                       <th className="p-4 text-right">Total Asset Value</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                  <tbody className="divide-y divide-slate-100 text-slate-700 font-sans">
                     {departmentQuery.data.map((dept: any) => (
-                      <tr key={dept.department_id} className="hover:bg-gray-50 transition">
-                        <td className="p-4 font-bold text-gray-900">{dept.department}</td>
-                        <td className="p-4 text-center font-semibold">{dept.active_allocations}</td>
+                      <tr key={dept.department_id} className="hover:bg-slate-50/50 transition">
+                        <td className="p-4 font-bold text-slate-900">{dept.department}</td>
+                        <td className="p-4 text-center font-mono">{dept.active_allocations}</td>
                         <td className="p-4 text-right font-mono font-bold text-purple-700">
                           ${dept.total_asset_value.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </td>

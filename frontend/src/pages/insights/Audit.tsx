@@ -90,21 +90,21 @@ export default function Audit() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 sm:p-8 space-y-6">
+    <div className="min-h-screen bg-slate-50/50 p-6 sm:p-8 space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-2">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight m-0 flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight m-0 flex items-center gap-3">
             <ClipboardList className="h-8 w-8 text-purple-600" />
             Asset Audits
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1.5 font-medium">
             Conduct inventory checks, verify equipment existence, and track compliance.
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center px-4 py-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 shadow-xs hover:shadow-md transition-all cursor-pointer"
+          className="premium-btn-primary py-2"
         >
           <Plus className="mr-1.5 h-4 w-4" />
           Create Cycle
@@ -112,11 +112,11 @@ export default function Audit() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+      <div className="premium-card p-4 flex items-center gap-4">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
           Filter Status:
         </span>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           {["", "open", "closed"].map((status) => (
             <button
               key={status}
@@ -124,10 +124,10 @@ export default function Audit() {
                 setStatusFilter(status);
                 setPage(1);
               }}
-              className={`px-3 py-1 text-xs font-medium rounded-lg capitalize transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg capitalize transition-all cursor-pointer ${
                 statusFilter === status
-                  ? "bg-purple-100 text-purple-700 font-bold"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "bg-purple-50 text-purple-700 border border-purple-100"
+                  : "text-slate-600 hover:bg-slate-50 border border-transparent"
               }`}
             >
               {status || "All"}
@@ -154,18 +154,18 @@ export default function Audit() {
               <div
                 key={cycle.id}
                 onClick={() => navigate(`/audit/${cycle.id}`)}
-                className="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs hover:shadow-md hover:border-purple-100 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                className="premium-card p-6 cursor-pointer flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-base font-bold text-gray-900 line-clamp-1">
+                  <div className="flex justify-between items-start gap-4 mb-4">
+                    <h3 className="text-base font-bold text-slate-900 line-clamp-1">
                       {cycle.name}
                     </h3>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border font-mono ${
                         isClosed
-                          ? "bg-gray-100 text-gray-700"
-                          : "bg-emerald-100 text-emerald-700"
+                          ? "bg-slate-50 text-slate-500 border-slate-200"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
                       }`}
                     >
                       {cycle.status}
@@ -173,9 +173,9 @@ export default function Audit() {
                   </div>
 
                   {/* Date information */}
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-4 font-medium">
+                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="font-mono">
                       {new Date(cycle.start_date).toLocaleDateString()} –{" "}
                       {new Date(cycle.end_date).toLocaleDateString()}
                     </span>
@@ -184,19 +184,19 @@ export default function Audit() {
                   {/* Scope details */}
                   <div className="flex flex-wrap gap-2 mb-6">
                     {cycle.scope_location && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-gray-50 text-gray-600 border border-gray-100">
-                        <MapPin className="h-2.5 w-2.5" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-50 text-slate-600 border border-slate-100">
+                        <MapPin className="h-2.5 w-2.5 text-slate-400" />
                         {cycle.scope_location}
                       </span>
                     )}
                     {cycle.department && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-gray-50 text-gray-600 border border-gray-100">
-                        <Building className="h-2.5 w-2.5" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-50 text-slate-600 border border-slate-100">
+                        <Building className="h-2.5 w-2.5 text-slate-400" />
                         {cycle.department.name}
                       </span>
                     )}
                     {!cycle.scope_location && !cycle.department && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-gray-50 text-gray-500 border border-gray-100">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-50 text-slate-400 border border-slate-100 font-mono">
                         Global scope (all assets)
                       </span>
                     )}
@@ -204,16 +204,16 @@ export default function Audit() {
                 </div>
 
                 {/* Progress bar */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold text-gray-500">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-semibold text-slate-500">
                     <span>Audit Progress</span>
-                    <span>
+                    <span className="font-mono font-bold">
                       {cycle.progress.checked} / {cycle.progress.total} assets ({percent}%)
                     </span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/50">
                     <div
-                      className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-purple-600 h-2 rounded-full transition-all duration-500 shadow-2xs"
                       style={{ width: `${percent}%` }}
                     />
                   </div>
@@ -223,10 +223,10 @@ export default function Audit() {
           })}
         </div>
       ) : (
-        <div className="bg-white py-16 text-center border border-gray-100 rounded-2xl">
-          <FileSpreadsheet className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-sm font-bold text-gray-700">No audit cycles found</h3>
-          <p className="text-xs text-gray-400 mt-1">Get started by creating a new audit cycle.</p>
+        <div className="premium-card py-16 text-center border-dashed">
+          <FileSpreadsheet className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-slate-700">No audit cycles found</h3>
+          <p className="text-xs text-slate-400 mt-1 font-medium">Get started by creating a new audit cycle.</p>
         </div>
       )}
 
@@ -255,75 +255,87 @@ export default function Audit() {
 
       {/* Creation Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100 flex flex-col">
-            <h2 className="text-lg font-bold text-gray-900 mb-1">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 flex flex-col">
+            <h2 className="text-xl font-extrabold text-slate-900 mb-1">
               Create Audit Cycle
             </h2>
-            <p className="text-xs text-gray-400 mb-4">
-              Assets in scope will be cataloged instantly.
+            <p className="text-xs text-slate-400 mb-6 font-medium">
+              Specify scope to catalog and target in-scope assets instantly.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {errorMsg && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2 border border-red-150">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {errorMsg}
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-600">Cycle Name</label>
+                <label className="premium-input-label">Cycle Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Q3 Inventory Audit"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500"
+                  className="premium-input"
                   required
                 />
+                <span className="premium-input-hint">
+                  * Use a descriptive title, e.g. "Annual IT Audit" or "Q3 Lab Equipment Check".
+                </span>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-600">Start Date</label>
+                  <label className="premium-input-label">Start Date</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500"
+                    className="premium-input"
                     required
                   />
+                  <span className="premium-input-hint">
+                    * Beginning of verification period.
+                  </span>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-600">End Date</label>
+                  <label className="premium-input-label">End Date</label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500"
+                    className="premium-input"
                     required
                   />
+                  <span className="premium-input-hint">
+                    * Completion deadline.
+                  </span>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-600">Location Scope (Optional)</label>
+                <label className="premium-input-label">Location Scope (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Headquarters, remote"
                   value={scopeLocation}
                   onChange={(e) => setScopeLocation(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500"
+                  className="premium-input"
                 />
+                <span className="premium-input-hint">
+                  * Limit checks to assets at a specific branch or lab site (leave blank for all).
+                </span>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-600">Department Scope (Optional)</label>
+                <label className="premium-input-label">Department Scope (Optional)</label>
                 <select
                   value={scopeDeptId}
                   onChange={(e) => setScopeDeptId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:border-purple-500 bg-white"
+                  className="premium-input bg-white cursor-pointer"
                 >
                   <option value="">All Departments</option>
                   {depts?.map((dept: any) => (
@@ -332,22 +344,25 @@ export default function Audit() {
                     </option>
                   ))}
                 </select>
+                <span className="premium-input-hint">
+                  * Limit checks to assets allocated to members of a specific department.
+                </span>
               </div>
 
-              <div className="flex gap-2 pt-4 justify-end">
+              <div className="flex gap-2.5 pt-4 justify-end">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
+                  className="premium-btn-secondary py-2"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="px-4 py-2 rounded-xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 flex items-center gap-1 cursor-pointer"
+                  className="premium-btn-primary py-2"
                 >
-                  {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                   Create Cycle
                 </button>
               </div>
