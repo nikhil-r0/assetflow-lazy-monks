@@ -1,13 +1,14 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../../app.js";
 import { BookingStatus } from "../../shared/enums.js";
+import { AppError, NotFoundError } from "../../shared/errors.js";
+import { lockAssetForUpdate } from "./booking.service.js";
 import {
   assertValidBookingRange,
   findOverlappingBooking,
   intervalsOverlap,
 } from "./overlap.js";
-import { AppError } from "../../shared/errors.js";
 
 function t(h: number, m = 0) {
   return new Date(Date.UTC(2026, 6, 12, h, m, 0));
@@ -44,7 +45,6 @@ describe("booking overlap (half-open intervals)", () => {
   });
 
   it("test_allow_booking_starting_at_existing_end_time", () => {
-    // Room B2: 9–10 exists; 10–11 must be allowed (adjacent)
     const clash = findOverlappingBooking(t(10), t(11), existing9to10);
     expect(clash).toBeNull();
     expect(intervalsOverlap(t(10), t(11), t(9), t(10))).toBe(false);
@@ -92,9 +92,24 @@ describe("booking overlap (half-open intervals)", () => {
   });
 });
 
-describe("booking create validation (no DB)", () => {
+describe("booking create race lock", () => {
+  it("test_lock_asset_for_update_issues_for_update_sql", async () => {
+    const queryRaw = vi.fn().mockResolvedValue([{ id: 7, is_bookable: true }]);
+    const row = await lockAssetForUpdate({ $queryRaw: queryRaw }, 7);
+    expect(row).toEqual({ id: 7, is_bookable: true });
+    expect(queryRaw).toHaveBeenCalledOnce();
+    const strings = queryRaw.mock.calls[0]?.[0] as TemplateStringsArray;
+    expect(strings.join(" ")).toMatch(/FOR UPDATE/i);
+  });
+
+  it("test_lock_asset_for_update_missing_asset_404", async () => {
+    const queryRaw = vi.fn().mockResolvedValue([]);
+    await expect(
+      lockAssetForUpdate({ $queryRaw: queryRaw }, 99),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
   it("test_reject_booking_non_bookable_asset_422_shape", () => {
-    // Documents the expected AppError shape used by bookingService when !is_bookable
     const err = new AppError("UNPROCESSABLE", 422, "Asset is not bookable", [
       { field: "resource_asset_id", issue: "not_bookable" },
     ]);

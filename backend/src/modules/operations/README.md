@@ -8,7 +8,7 @@
 | Method | Path | Status |
 |---|---|---|
 | `GET` | `/api/v1/operations/ping` | ✅ Phase 0 |
-| `POST` | `/api/v1/bookings` | ✅ Phase 1 (overlap half-open) |
+| `POST` | `/api/v1/bookings` | ✅ Phase 1 (overlap half-open + asset `FOR UPDATE`) |
 | `GET` | `/api/v1/bookings` | ✅ Phase 1 |
 | `POST` | `/api/v1/maintenance-requests` | Phase 2 |
 | workflow | `/api/v1/maintenance-requests/:id/{approve,reject,assign,start,resolve}` | Phase 2 |
