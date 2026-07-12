@@ -9,6 +9,10 @@ import {
 
 import "./App.css";
 
+import { AuthProvider, useAuth } from "./auth/AuthContext";
+import { Login } from "./pages/auth/Login";
+import { Signup } from "./pages/auth/Signup";
+
 // Track B
 import { RegistryPage } from "./pages/assets/Registry";
 import { AssetFormPage } from "./pages/assets/AssetForm";
@@ -41,25 +45,17 @@ const Layout = () => {
   );
 };
 
-const PlaceholderLogin = () => (
-  <div className="flex min-h-screen items-center justify-center bg-gray-50">
-    <div className="rounded-lg bg-white p-8 shadow-md">
-      <h2 className="mb-4 text-2xl font-bold">Login</h2>
-      <p className="text-gray-500">
-        Auth module is not yet implemented.
-      </p>
-    </div>
-  </div>
-);
+const AppRoutes = () => {
+  const { isAuthenticated, isLoading } = useAuth();
 
-export default function App() {
-  // Replace with auth context later
-  const isAuthenticated = false;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<PlaceholderLogin />} />
+    <Routes>
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/signup" element={!isAuthenticated ? <Signup /> : <Navigate to="/dashboard" replace />} />
 
         <Route
           element={
@@ -90,6 +86,15 @@ export default function App() {
           {/* <Route path="/reports" element={<ReportsPage />} /> */}
         </Route>
       </Routes>
+  );
+};
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
