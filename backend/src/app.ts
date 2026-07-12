@@ -12,6 +12,7 @@ import { categoryRoutes } from "./modules/auth/category.routes.js";
 
 // Track B
 import { allocationsRouter, assetsRouter } from "./modules/assets/assets.routes.js";
+import { transferRouter } from "./modules/assets/transfer.routes.js";
 
 // Track C
 import { bookingRouter } from "./modules/operations/booking.routes.js";
@@ -81,6 +82,7 @@ export function createApp() {
   // ----------------------
   app.use("/api/v1/assets", assetsRouter);
   app.use("/api/v1/allocations", allocationsRouter);
+  app.use("/api/v1/transfer-requests", transferRouter);
 
   // ----------------------
   // Track C Routes

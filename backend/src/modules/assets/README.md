@@ -16,13 +16,17 @@
 | POST | `/api/v1/assets/:id/documents` | admin, asset_manager |
 | POST | `/api/v1/allocations` | admin, asset_manager |
 | POST | `/api/v1/allocations/:id/return` | admin, asset_manager |
+| POST | `/api/v1/transfer-requests` | auth |
+| GET | `/api/v1/transfer-requests` | auth (scoped) |
+| POST | `/api/v1/transfer-requests/:id/approve` | admin, asset_manager, department_head |
+| POST | `/api/v1/transfer-requests/:id/reject` | admin, asset_manager, department_head |
 
 Auth: Bearer JWT **or** parallel-dev headers `x-user-id` + `x-user-role`.
 
-## Hard rule
-Double allocation → **409 CONFLICT** with `holder_name` (Transfer CTA).
+## Hard rules
+- Double allocation → **409 CONFLICT** with `holder_name` (Transfer CTA).
+- Approve transfer atomically closes old allocation + opens new (one active invariant).
 
 ## Still TODO
-- Transfer request workflow (Phase 4)
 - Overdue DB flagger endpoint (pure helper done)
-- FE wiring to these APIs
+- Richer Registry FE wiring
