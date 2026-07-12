@@ -43,12 +43,12 @@ describe("OrgService (Departments)", () => {
     it("parent_cycle_detected_and_rejected", async () => {
       // Trying to set parent of 1 to 3.
       // But 3's parent is 2, and 2's parent is 1. (1 -> 2 -> 3 -> 1 cycle)
-      vi.mocked(prisma.departments.findUnique).mockImplementation((args: any) => {
+      vi.mocked(prisma.departments.findUnique).mockImplementation(((args: any) => {
         if (args.where.id === 1) return Promise.resolve({ id: 1, name: "Dept 1" } as any);
         if (args.where.id === 3) return Promise.resolve({ id: 3, name: "Dept 3", parent_department_id: 2 } as any);
         if (args.where.id === 2) return Promise.resolve({ id: 2, name: "Dept 2", parent_department_id: 1 } as any);
         return Promise.resolve(null);
-      });
+      }) as any);
 
       await expect(
         orgService.updateDepartment(1, { parent_department_id: 3 })
@@ -56,10 +56,10 @@ describe("OrgService (Departments)", () => {
     });
 
     it("assign_head_user_persists", async () => {
-      vi.mocked(prisma.departments.findUnique).mockImplementation((args: any) => {
+      vi.mocked(prisma.departments.findUnique).mockImplementation(((args: any) => {
         if (args.where.id === 10) return Promise.resolve({ id: 10, name: "HR" } as any);
         return Promise.resolve(null);
-      });
+      }) as any);
       vi.mocked(prisma.users.findUnique).mockResolvedValue({ id: 42, name: "Alice" } as any);
       vi.mocked(prisma.departments.update).mockResolvedValue({ id: 10, head_user_id: 42 } as any);
 
