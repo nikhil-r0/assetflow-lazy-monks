@@ -135,22 +135,22 @@ export class ReportsService {
 
   // ── 4. Department Allocation ──────────────────────────────────────────────
   static async departmentAllocation() {
-    const depts = await prisma.departments.findMany({
-      select: {
-        id: true,
-        name: true,
-        allocations: {
-          where: { status: "active" },
-          include: {
-            asset: { select: { acquisition_cost: true } },
-          },
-        },
+    const activeAllocations = await prisma.allocations.findMany({
+      where: { status: "active" },
+      include: {
+        employee: { select: { department_id: true } },
+        asset: { select: { acquisition_cost: true } },
       },
     });
 
+    const depts = await prisma.departments.findMany();
+
     return depts.map((dept) => {
-      const active_allocations = dept.allocations.length;
-      const total_asset_value = dept.allocations.reduce((sum, a) => {
+      const deptAllocations = activeAllocations.filter(
+        (a) => a.department_id === dept.id || a.employee?.department_id === dept.id
+      );
+      const active_allocations = deptAllocations.length;
+      const total_asset_value = deptAllocations.reduce((sum, a) => {
         return sum + Number(a.asset.acquisition_cost ?? 0);
       }, 0);
       return {

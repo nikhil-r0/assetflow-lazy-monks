@@ -178,7 +178,8 @@ describe("Audit Phase 4 — Item Verification, Discrepancy Report, Close Cycle",
       .send({ result: AuditResult.verified });
 
     expect(res.status).toBe(422);
-    expect(res.body.error).toBe("CYCLE_CLOSED");
+    expect(res.body.error.code).toBe("UNPROCESSABLE");
+    expect(res.body.error.message).toBe("CYCLE_CLOSED");
   });
 
   it("test_close_already_closed_422", async () => {
@@ -188,6 +189,7 @@ describe("Audit Phase 4 — Item Verification, Discrepancy Report, Close Cycle",
       .set("x-user-role", adminUser.role);
 
     expect(res.status).toBe(422);
-    expect(res.body.error).toBe("ALREADY_CLOSED");
+    expect(res.body.error.code).toBe("UNPROCESSABLE");
+    expect(res.body.error.message).toBe("ALREADY_CLOSED");
   });
 });

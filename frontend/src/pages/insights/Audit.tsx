@@ -147,7 +147,7 @@ export default function Audit() {
             const isClosed = cycle.status === "closed";
             const percent =
               cycle.progress.total > 0
-                ? Math.round((cycle.progress.verified / cycle.progress.total) * 100)
+                ? Math.round((cycle.progress.checked / cycle.progress.total) * 100)
                 : 0;
 
             return (
@@ -208,7 +208,7 @@ export default function Audit() {
                   <div className="flex justify-between text-xs font-semibold text-gray-500">
                     <span>Audit Progress</span>
                     <span>
-                      {cycle.progress.verified} / {cycle.progress.total} assets ({percent}%)
+                      {cycle.progress.checked} / {cycle.progress.total} assets ({percent}%)
                     </span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">

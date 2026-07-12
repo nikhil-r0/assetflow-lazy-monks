@@ -147,7 +147,8 @@ describe("Audit Cycles Module (Phase 3)", () => {
       });
 
     expect(res.status).toBe(422);
-    expect(res.body.error).toBe("END_DATE_BEFORE_START_DATE");
+    expect(res.body.error.code).toBe("UNPROCESSABLE");
+    expect(res.body.error.message).toBe("END_DATE_BEFORE_START_DATE");
   });
 
   it("test_scope_all_assets_when_no_scope_given", async () => {
@@ -258,7 +259,8 @@ describe("Audit Cycles Module (Phase 3)", () => {
         .send({ auditor_user_id: auditorUser1.id });
 
       expect(res2.status).toBe(409);
-      expect(res2.body.error).toBe("AUDITOR_ALREADY_ASSIGNED");
+      expect(res2.body.error.code).toBe("CONFLICT");
+      expect(res2.body.error.message).toBe("AUDITOR_ALREADY_ASSIGNED");
     });
 
     it("test_scoping_limits_cycle_access_and_visibility", async () => {
@@ -269,7 +271,8 @@ describe("Audit Cycles Module (Phase 3)", () => {
         .set("x-user-role", normalEmployee.role);
 
       expect(resDetailNormal.status).toBe(403);
-      expect(resDetailNormal.body.error).toBe("UNAUTHORIZED_CYCLE_ACCESS");
+      expect(resDetailNormal.body.error.code).toBe("FORBIDDEN");
+      expect(resDetailNormal.body.error.message).toBe("UNAUTHORIZED_CYCLE_ACCESS");
 
       // 2. Assigned auditor tries to access details of the cycle -> 200
       const resDetailAuditor = await request(app)

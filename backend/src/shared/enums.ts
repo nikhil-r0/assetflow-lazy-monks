@@ -107,6 +107,7 @@ export const NOTIF = {
   BOOKING_REMINDER: "BOOKING_REMINDER",
   OVERDUE_RETURN: "OVERDUE_RETURN",
   AUDIT_DISCREPANCY: "AUDIT_DISCREPANCY",
+  AUDIT_ASSIGNMENT: "AUDIT_ASSIGNMENT",
 } as const;
 
 /** Activity action constants — Track D owns taxonomy; producers import these. */

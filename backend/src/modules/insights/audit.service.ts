@@ -81,7 +81,7 @@ export class AuditService {
       data: { audit_cycle_id: cycleId, auditor_user_id: auditorUserId },
     });
 
-    await createNotification(auditorUserId, NOTIF.AUDIT_DISCREPANCY, `You have been assigned to audit cycle: ${cycle.name}`, "audit_cycles", cycleId);
+    await createNotification(auditorUserId, NOTIF.AUDIT_ASSIGNMENT, `You have been assigned to audit cycle: ${cycle.name}`, "audit_cycles", cycleId);
     return assignment;
   }
 
@@ -122,7 +122,10 @@ export class AuditService {
       department: c.department,
       auditors: c.auditors.map((a) => a.auditor),
       progress: {
-        verified: c.items.filter((i) => i.result !== null).length,
+        checked: c.items.filter((i) => i.result !== null).length,
+        verified: c.items.filter((i) => i.result === "verified").length,
+        missing: c.items.filter((i) => i.result === "missing").length,
+        damaged: c.items.filter((i) => i.result === "damaged").length,
         total: c.items.length,
       },
     }));

@@ -64,19 +64,34 @@ function getScopingConditions(userId: number, role: string, departmentId?: numbe
   const transferWhere: any = {};
 
   if (isDeptHead && departmentId) {
-    allocationWhere.department_id = departmentId;
+    allocationWhere.OR = [
+      { department_id: departmentId },
+      { employee: { department_id: departmentId } }
+    ];
     bookingWhere.department_id = departmentId;
-    // Maintenance: raised by department member OR on asset allocated to department
+    // Maintenance: raised by department member OR on asset allocated to department (directly or via employee)
     maintenanceWhere.OR = [
       { raiser: { department_id: departmentId } },
-      { asset: { allocations: { some: { department_id: departmentId, status: AllocStatus.active } } } }
+      { asset: { allocations: { some: { 
+        OR: [
+          { department_id: departmentId },
+          { employee: { department_id: departmentId } }
+        ],
+        status: AllocStatus.active 
+      } } } }
     ];
-    // Transfers: target/source user in department OR asset allocated to department
+    // Transfers: target/source user in department OR asset allocated to department (directly or via employee)
     transferWhere.OR = [
       { from_user: { department_id: departmentId } },
       { to_user: { department_id: departmentId } },
       { requester: { department_id: departmentId } },
-      { asset: { allocations: { some: { department_id: departmentId, status: AllocStatus.active } } } }
+      { asset: { allocations: { some: { 
+        OR: [
+          { department_id: departmentId },
+          { employee: { department_id: departmentId } }
+        ],
+        status: AllocStatus.active 
+      } } } }
     ];
   } else if (!isManager) {
     // Employee role: self scoping
@@ -139,6 +154,7 @@ export class DashboardService {
     const maintenanceTodayCount = await prisma.maintenance_requests.count({
       where: {
         ...maintenanceWhere,
+        created_at: { gte: todayStart },
         status: { in: [MaintStatus.pending, MaintStatus.approved, MaintStatus.technician_assigned, MaintStatus.in_progress] }
       }
     });
