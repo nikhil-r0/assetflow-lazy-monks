@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ===== TRACK A: auth/org =====  (users, departments, asset_categories, category_custom_fields)
