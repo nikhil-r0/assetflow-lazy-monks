@@ -8,7 +8,7 @@ import { errorHandler } from "./shared/errors.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 
 // Track B
-import { assetsRouter } from "./modules/assets/assets.routes.js";
+import { allocationsRouter, assetsRouter } from "./modules/assets/assets.routes.js";
 
 // Track C
 import { bookingRouter } from "./modules/operations/booking.routes.js";
@@ -55,6 +55,7 @@ export function createApp() {
   // Track B Routes
   // ----------------------
   app.use("/api/v1/assets", assetsRouter);
+  app.use("/api/v1/allocations", allocationsRouter);
 
   // ----------------------
   // Track C Routes

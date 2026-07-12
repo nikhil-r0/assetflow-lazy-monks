@@ -1,31 +1,28 @@
 # Track B — Assets module
 
-**Owner:** Track B · Branch pattern: `feature/assets-*`  
 **Screens:** 4 (Registry), 5 (Allocation & Transfer)
 
-## Status
+## Live endpoints
 
-| Piece | Status |
-|---|---|
-| `GET /api/v1/assets/ping` | ✅ |
-| `transitionStatusPure` / `canTransition` | ✅ |
-| `formatAssetTag` / `placeholderAssetTag` | ✅ |
-| `validateCustomFields` | ✅ |
-| 409 `buildAlreadyAllocatedConflict` | ✅ |
-| FE shells Registry / AssetForm / Allocation | ✅ |
-| Prisma client generate | ⏳ Track A Prisma 7 datasource fix |
-| CRUD / allocate APIs | ⏳ Track A auth + categories |
+| Method | Path | Roles |
+|---|---|---|
+| GET | `/api/v1/assets/ping` | public |
+| POST | `/api/v1/assets` | admin, asset_manager |
+| GET | `/api/v1/assets` | auth |
+| GET | `/api/v1/assets/:id` | auth |
+| PATCH | `/api/v1/assets/:id` | admin, asset_manager (no status) |
+| PATCH | `/api/v1/assets/:id/status` | admin, asset_manager |
+| GET | `/api/v1/assets/:id/history` | auth |
+| POST | `/api/v1/assets/:id/documents` | admin, asset_manager |
+| POST | `/api/v1/allocations` | admin, asset_manager |
+| POST | `/api/v1/allocations/:id/return` | admin, asset_manager |
 
-## Tests
+Auth: Bearer JWT **or** parallel-dev headers `x-user-id` + `x-user-role`.
 
-```bash
-cd backend && npm test
-```
+## Hard rule
+Double allocation → **409 CONFLICT** with `holder_name` (Transfer CTA).
 
-## Frozen export for C/D
-
-```ts
-import { assetService } from "./assets.service.js";
-// assetService.transitionStatus(assetId, to, actorId, reason?)
-// Until DB: assetService.transitionStatusPure(from, to)
-```
+## Still TODO
+- Transfer request workflow (Phase 4)
+- Overdue DB flagger endpoint (pure helper done)
+- FE wiring to these APIs
