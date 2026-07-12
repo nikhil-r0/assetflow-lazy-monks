@@ -93,6 +93,7 @@ export enum AuditResult {
   damaged = "damaged",
 }
 
+/** Notification type constants — Track D owns taxonomy; producers import these. */
 export const NOTIF = {
   ASSET_ASSIGNED: "ASSET_ASSIGNED",
   TRANSFER_REQUESTED: "TRANSFER_REQUESTED",
@@ -108,6 +109,7 @@ export const NOTIF = {
   AUDIT_DISCREPANCY: "AUDIT_DISCREPANCY",
 } as const;
 
+/** Activity action constants — Track D owns taxonomy; producers import these. */
 export const ACT = {
   SIGNUP: "SIGNUP",
   LOGIN: "LOGIN",
