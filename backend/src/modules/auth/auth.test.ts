@@ -115,7 +115,7 @@ describe("AuthService", () => {
         password_hash: "correct_hash",
         status: UserStatus.active,
       } as any);
-      vi.mocked(bcrypt.compare).mockResolvedValue(false);
+      (vi.mocked(bcrypt.compare) as any).mockResolvedValue(false);
 
       await expect(
         authService.login({ email: "test@example.com", password: "wrong_password" }),
@@ -137,7 +137,7 @@ describe("AuthService", () => {
         password_hash: "correct_hash",
         status: UserStatus.inactive,
       } as any);
-      vi.mocked(bcrypt.compare).mockResolvedValue(true);
+      (vi.mocked(bcrypt.compare) as any).mockResolvedValue(true);
 
       await expect(
         authService.login({ email: "test@example.com", password: "password123" }),
@@ -153,7 +153,7 @@ describe("AuthService", () => {
         password_hash: "correct_hash",
         status: UserStatus.active,
       } as any);
-      vi.mocked(bcrypt.compare).mockResolvedValue(true);
+      (vi.mocked(bcrypt.compare) as any).mockResolvedValue(true);
 
       const result = await authService.login({
         email: "test@example.com",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { apiClient } from "../../api/client";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 
@@ -122,7 +122,7 @@ export default function DepartmentsTab() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {departments.map((dept) => (
+            {departments.map((dept: any) => (
               <tr key={dept.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{dept.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{dept.name}</td>
@@ -196,7 +196,7 @@ export default function DepartmentsTab() {
                   <option value="">None</option>
                   {departments
                     .filter((d) => d.id !== editingDept?.id)
-                    .map((d) => (
+                    .map((d: any) => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
@@ -210,7 +210,7 @@ export default function DepartmentsTab() {
                   onChange={(e) => setFormData({ ...formData, head_user_id: e.target.value })}
                 >
                   <option value="">None</option>
-                  {users.map((u) => (
+                  {users.map((u: any) => (
                     <option key={u.id} value={u.id}>{u.name}</option>
                   ))}
                 </select>

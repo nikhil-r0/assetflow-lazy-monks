@@ -22,7 +22,7 @@ import { operationsRouter } from "./modules/operations/operations.routes.js";
 // Track D
 import { insightsRouter } from "./modules/insights/insights.routes.js";
 import { dashboardRouter } from "./modules/insights/dashboard.routes.js";
-import { auditRouter } from "./modules/insights/audit.routes.js";
+import { auditRouter, auditItemRouter } from "./modules/insights/audit.routes.js";
 import { reportsRouter } from "./modules/insights/reports.routes.js";
 import { notifRouter } from "./modules/insights/notif.routes.js";
 import { logsRouter } from "./modules/insights/logs.routes.js";
@@ -97,6 +97,7 @@ export function createApp() {
   app.use("/api/v1/insights", insightsRouter);
   app.use("/api/v1/dashboard", dashboardRouter);
   app.use("/api/v1/audit-cycles", auditRouter);
+  app.use("/api/v1/audit-items", auditItemRouter);
   app.use("/api/v1/reports", reportsRouter);
   app.use("/api/v1/notifications", notifRouter);
   app.use("/api/v1/activity-logs", logsRouter);

@@ -11,7 +11,7 @@ authRoutes.post("/signup", async (req, res, next) => {
   try {
     const parseResult = signupSchema.safeParse(req.body);
     if (!parseResult.success) {
-      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", parseResult.error.errors);
+      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", (parseResult.error as any).issues);
     }
     const user = await authService.signup(parseResult.data);
     res.status(201).json(user);
@@ -24,7 +24,7 @@ authRoutes.post("/login", async (req, res, next) => {
   try {
     const parseResult = loginSchema.safeParse(req.body);
     if (!parseResult.success) {
-      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", parseResult.error.errors);
+      throw new AppError("VALIDATION_ERROR", 422, "Validation failed", (parseResult.error as any).issues);
     }
     const result = await authService.login(parseResult.data);
     res.status(200).json(result);

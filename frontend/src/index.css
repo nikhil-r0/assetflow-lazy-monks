@@ -14,8 +14,6 @@
     rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 }
 
-@layer base {
-  body {
-    @apply antialiased text-gray-900 bg-gray-50;
-  }
+body {
+  @apply antialiased text-gray-900 bg-gray-50;
 }

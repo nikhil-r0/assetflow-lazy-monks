@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { apiClient } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 
@@ -128,7 +128,7 @@ export default function DirectoryTab() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {users.map((u) => (
+            {users.map((u: any) => (
               <tr key={u.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">{u.name}</div>
@@ -141,7 +141,7 @@ export default function DirectoryTab() {
                     onChange={(e) => handleDepartmentChange(u.id, e.target.value)}
                   >
                     <option value="">None</option>
-                    {departments.map(d => (
+                    {departments.map((d: any) => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>

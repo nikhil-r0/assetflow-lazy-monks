@@ -36,44 +36,12 @@ import { BookingPage } from "./pages/ops/Booking";
 import { MaintenancePage } from "./pages/ops/Maintenance";
 
 // Track D
+import Dashboard from "./pages/insights/Dashboard";
+import Audit from "./pages/insights/Audit";
+import AuditCycle from "./pages/insights/AuditCycle";
 import Notifications from "./pages/insights/Notifications";
 import ActivityLogs from "./pages/insights/ActivityLogs";
-
-function Dashboard() {
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-      <p className="mt-2 text-gray-500">
-        KPI widgets coming in Phase 2.
-      </p>
-    </div>
-  );
-}
-
-function Audit() {
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">Audit Cycles</h1>
-      <p className="mt-2 text-gray-500">
-        Audit management coming in Phase 3 &amp; 4.
-      </p>
-    </div>
-  );
-}
-
-function Reports() {
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">
-        Reports &amp; Analytics
-      </h1>
-      <p className="mt-2 text-gray-500">
-        Analytics charts coming in Phase 5.
-      </p>
-    </div>
-  );
-}
-
+import Reports from "./pages/insights/Reports";
 const NAV = [
   {
     to: "/dashboard",
@@ -193,6 +161,7 @@ const Layout = () => {
             {/* Track D */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/audit" element={<Audit />} />
+            <Route path="/audit/:id" element={<AuditCycle />} />
             <Route path="/reports" element={<Reports />} />
             <Route
               path="/notifications"
