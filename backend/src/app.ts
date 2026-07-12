@@ -4,6 +4,9 @@ import cors from "cors";
 import { prisma } from "./prismaClient.js";
 import { errorHandler } from "./shared/errors.js";
 
+// Track A
+import { authRoutes } from "./modules/auth/auth.routes.js";
+
 // Track B
 import { assetsRouter } from "./modules/assets/assets.routes.js";
 
@@ -16,6 +19,7 @@ import { notifRouter } from "./modules/insights/notif.routes.js";
 import { logsRouter } from "./modules/insights/logs.routes.js";
 
 export const app = express();
+export const createApp = () => app;
 
 app.use(
   cors({
@@ -34,7 +38,7 @@ app.use((req, _res, next) => {
 // ----------------------
 // Track A Routes
 // ----------------------
-// app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 // app.use("/api/v1/departments", departmentRoutes);
 // app.use("/api/v1/categories", categoryRoutes);
 // app.use("/api/v1/users", userRoutes);
