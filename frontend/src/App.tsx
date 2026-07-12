@@ -15,11 +15,14 @@ import {
   Activity,
   Wrench,
   CalendarDays,
+  Settings,
+  LogOut,
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { Login } from "./pages/auth/Login";
 import { Signup } from "./pages/auth/Signup";
+import { OrgSetup } from "./pages/org/OrgSetup";
 
 import { NotificationBell } from "./components/NotificationBell";
 
@@ -107,9 +110,16 @@ const NAV = [
     icon: Activity,
     label: "Activity Logs",
   },
+  {
+    to: "/org",
+    icon: Settings,
+    label: "Org Setup",
+  },
 ];
 
 const Layout = () => {
+  const { logout } = useAuth();
+
   return (
     <div
       className="flex h-screen bg-gray-50 font-sans"
@@ -159,12 +169,26 @@ const Layout = () => {
             AssetFlow
           </span>
 
-          <NotificationBell />
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            <button
+              onClick={() => {
+                logout();
+              }}
+              className="text-gray-500 hover:text-red-600 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto">
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Track A */}
+            <Route path="/org" element={<OrgSetup />} />
 
             {/* Track D */}
             <Route path="/dashboard" element={<Dashboard />} />

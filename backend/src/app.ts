@@ -6,6 +6,9 @@ import { errorHandler } from "./shared/errors.js";
 
 // Track A
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import { departmentRoutes } from "./modules/auth/org.routes.js";
+import { userRoutes } from "./modules/auth/user.routes.js";
+import { categoryRoutes } from "./modules/auth/category.routes.js";
 
 // Track B
 import { allocationsRouter, assetsRouter } from "./modules/assets/assets.routes.js";
@@ -29,15 +32,31 @@ import { logsRouter } from "./modules/insights/logs.routes.js";
 export function createApp() {
   const app = express();
 
-  const corsOrigin = process.env.CORS_ORIGIN || "*";
-  const allowedOrigins =
-    corsOrigin === "*"
-      ? true
-      : corsOrigin.split(",").map((o) => o.trim()).filter(Boolean);
+  const defaultOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+  const configuredOrigins = (process.env.CORS_ORIGIN ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .filter((origin) => {
+      try {
+        const parsed = new URL(origin);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+      } catch {
+        return false;
+      }
+    });
+  const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : defaultOrigins;
 
   app.use(
     cors({
-      origin: allowedOrigins,
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error("Not allowed by CORS"));
+      },
     }),
   );
 
@@ -53,9 +72,9 @@ export function createApp() {
   // Track A Routes
   // ----------------------
   app.use("/api/v1/auth", authRoutes);
-  // app.use("/api/v1/departments", departmentRoutes);
-  // app.use("/api/v1/categories", categoryRoutes);
-  // app.use("/api/v1/users", userRoutes);
+  app.use("/api/v1/departments", departmentRoutes);
+  app.use("/api/v1/categories", categoryRoutes);
+  app.use("/api/v1/users", userRoutes);
 
   // ----------------------
   // Track B Routes
