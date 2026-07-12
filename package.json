@@ -1,0 +1,13 @@
+{
+  "name": "assetflow-lazy-monks",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "verify": "npm run verify --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend",
+    "build": "npm run build --workspace=frontend"
+  }
+}
