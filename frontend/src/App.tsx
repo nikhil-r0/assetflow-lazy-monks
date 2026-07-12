@@ -13,6 +13,8 @@ import {
   Bell,
   BarChart3,
   Activity,
+  Wrench,
+  CalendarDays,
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./auth/AuthContext";
@@ -28,6 +30,7 @@ import { AllocationPage } from "./pages/assets/Allocation";
 
 // Track C
 import { BookingPage } from "./pages/ops/Booking";
+import { MaintenancePage } from "./pages/ops/Maintenance";
 
 // Track D
 import Notifications from "./pages/insights/Notifications";
@@ -73,6 +76,16 @@ const NAV = [
     to: "/dashboard",
     icon: LayoutDashboard,
     label: "Dashboard",
+  },
+  {
+    to: "/bookings",
+    icon: CalendarDays,
+    label: "Bookings",
+  },
+  {
+    to: "/maintenance",
+    icon: Wrench,
+    label: "Maintenance",
   },
   {
     to: "/audit",
@@ -176,6 +189,7 @@ const Layout = () => {
 
             {/* Track C */}
             <Route path="/bookings" element={<BookingPage />} />
+            <Route path="/maintenance" element={<MaintenancePage />} />
 
             <Route
               path="*"
