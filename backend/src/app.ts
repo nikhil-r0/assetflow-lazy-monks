@@ -6,6 +6,9 @@ import { errorHandler } from "./shared/errors.js";
 
 // Track A
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import { departmentRoutes } from "./modules/auth/org.routes.js";
+import { userRoutes } from "./modules/auth/user.routes.js";
+import { categoryRoutes } from "./modules/auth/category.routes.js";
 
 // Track B
 import { assetsRouter } from "./modules/assets/assets.routes.js";
@@ -47,9 +50,9 @@ export function createApp() {
   // Track A Routes
   // ----------------------
   app.use("/api/v1/auth", authRoutes);
-  // app.use("/api/v1/departments", departmentRoutes);
-  // app.use("/api/v1/categories", categoryRoutes);
-  // app.use("/api/v1/users", userRoutes);
+  app.use("/api/v1/departments", departmentRoutes);
+  app.use("/api/v1/categories", categoryRoutes);
+  app.use("/api/v1/users", userRoutes);
 
   // ----------------------
   // Track B Routes
