@@ -1,70 +1,131 @@
-import { Routes, Route, NavLink, Navigate } from 'react-router-dom'
-import { LayoutDashboard, ClipboardList, Bell, BarChart3, Activity } from 'lucide-react'
-import { NotificationBell } from './components/NotificationBell'
-import Notifications from './pages/insights/Notifications'
-import ActivityLogs from './pages/insights/ActivityLogs'
+import "./App.css";
 
-// ── Placeholder pages for other phases ──────────────────────────────────────
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  NavLink,
+  Navigate,
+} from "react-router-dom";
+
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Bell,
+  BarChart3,
+  Activity,
+} from "lucide-react";
+
+import { AuthProvider, useAuth } from "./auth/AuthContext";
+import { Login } from "./pages/auth/Login";
+import { Signup } from "./pages/auth/Signup";
+
+import { NotificationBell } from "./components/NotificationBell";
+
+// Track B
+import { RegistryPage } from "./pages/assets/Registry";
+import { AssetFormPage } from "./pages/assets/AssetForm";
+import { AllocationPage } from "./pages/assets/Allocation";
+
+// Track C
+import { BookingPage } from "./pages/ops/Booking";
+
+// Track D
+import Notifications from "./pages/insights/Notifications";
+import ActivityLogs from "./pages/insights/ActivityLogs";
+
 function Dashboard() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-      <p className="text-gray-500 mt-2">KPI widgets coming in Phase 2.</p>
+      <p className="mt-2 text-gray-500">
+        KPI widgets coming in Phase 2.
+      </p>
     </div>
-  )
+  );
 }
+
 function Audit() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-gray-900">Audit Cycles</h1>
-      <p className="text-gray-500 mt-2">Audit management coming in Phase 3 & 4.</p>
+      <p className="mt-2 text-gray-500">
+        Audit management coming in Phase 3 &amp; 4.
+      </p>
     </div>
-  )
+  );
 }
+
 function Reports() {
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
-      <p className="text-gray-500 mt-2">Analytics charts coming in Phase 5.</p>
+      <h1 className="text-3xl font-bold text-gray-900">
+        Reports &amp; Analytics
+      </h1>
+      <p className="mt-2 text-gray-500">
+        Analytics charts coming in Phase 5.
+      </p>
     </div>
-  )
+  );
 }
 
-// ── Navigation definition ────────────────────────────────────────────────────
 const NAV = [
-  { to: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/audit',          icon: ClipboardList,   label: 'Audit Cycles' },
-  { to: '/reports',        icon: BarChart3,        label: 'Reports' },
-  { to: '/notifications',  icon: Bell,             label: 'Notifications' },
-  { to: '/activity-logs',  icon: Activity,         label: 'Activity Logs' },
-]
+  {
+    to: "/dashboard",
+    icon: LayoutDashboard,
+    label: "Dashboard",
+  },
+  {
+    to: "/audit",
+    icon: ClipboardList,
+    label: "Audit Cycles",
+  },
+  {
+    to: "/reports",
+    icon: BarChart3,
+    label: "Reports",
+  },
+  {
+    to: "/notifications",
+    icon: Bell,
+    label: "Notifications",
+  },
+  {
+    to: "/activity-logs",
+    icon: Activity,
+    label: "Activity Logs",
+  },
+];
 
-// ── App shell ────────────────────────────────────────────────────────────────
-export default function App() {
+const Layout = () => {
   return (
-    <div className="flex h-screen bg-gray-50 font-sans" style={{ textAlign: 'left' }}>
+    <div
+      className="flex h-screen bg-gray-50 font-sans"
+      style={{ textAlign: "left" }}
+    >
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 bg-white border-r border-gray-100 flex flex-col shadow-sm">
-        {/* Logo */}
-        <div className="px-6 py-5 border-b border-gray-100">
+      <aside className="flex w-64 shrink-0 flex-col border-r border-gray-100 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-6 py-5">
           <span className="text-xl font-extrabold tracking-tight text-purple-600">
             Asset<span className="text-gray-900">Flow</span>
           </span>
-          <p className="text-xs text-gray-400 mt-0.5">Insights Module · Track D</p>
+
+          <p className="mt-0.5 text-xs text-gray-400">
+            Insights Module · Phase 1
+          </p>
         </div>
 
-        {/* Nav links */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
           {NAV.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
-              id={`nav-${label.toLowerCase().replace(/\s+/g, '-')}`}
+              id={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
                   isActive
-                    ? 'bg-purple-50 text-purple-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? "bg-purple-50 text-purple-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`
               }
             >
@@ -74,32 +135,111 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Footer */}
-        <div className="px-4 py-4 border-t border-gray-100 text-xs text-gray-400">
-          AssetFlow v0.1 · Phase 1
+        <div className="border-t border-gray-100 px-4 py-4 text-xs text-gray-400">
+          AssetFlow v0.1
         </div>
       </aside>
 
-      {/* Main area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
-        <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 shadow-xs">
-          <span className="text-sm font-medium text-gray-700">AssetFlow Insights</span>
+      {/* Main */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-gray-100 bg-white px-6">
+          <span className="text-sm font-medium text-gray-700">
+            AssetFlow
+          </span>
+
           <NotificationBell />
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto">
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Track D */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/audit" element={<Audit />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/activity-logs" element={<ActivityLogs />} />
+            <Route
+              path="/notifications"
+              element={<Notifications />}
+            />
+            <Route
+              path="/activity-logs"
+              element={<ActivityLogs />}
+            />
+
+            {/* Track B */}
+            <Route path="/assets" element={<RegistryPage />} />
+            <Route path="/assets/new" element={<AssetFormPage />} />
+            <Route
+              path="/allocations"
+              element={<AllocationPage />}
+            />
+
+            {/* Track C */}
+            <Route path="/bookings" element={<BookingPage />} />
+
+            <Route
+              path="*"
+              element={<Navigate to="/dashboard" replace />}
+            />
           </Routes>
         </main>
       </div>
     </div>
-  )
+  );
+};
+
+const AppRoutes = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          !isAuthenticated ? (
+            <Login />
+          ) : (
+            <Navigate to="/dashboard" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/signup"
+        element={
+          !isAuthenticated ? (
+            <Signup />
+          ) : (
+            <Navigate to="/dashboard" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/*"
+        element={
+          isAuthenticated ? (
+            <Layout />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+    </Routes>
+  );
+};
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }

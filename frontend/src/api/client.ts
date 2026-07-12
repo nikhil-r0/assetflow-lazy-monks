@@ -17,20 +17,6 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Mock headers for local development/testing
-    const mockUserId = localStorage.getItem("mock-user-id");
-    const mockUserRole = localStorage.getItem("mock-user-role");
-    const mockUserDeptId = localStorage.getItem("mock-user-dept-id");
-
-    if (mockUserId && mockUserRole) {
-      config.headers["x-user-id"] = mockUserId;
-      config.headers["x-user-role"] = mockUserRole;
-
-      if (mockUserDeptId) {
-        config.headers["x-user-dept-id"] = mockUserDeptId;
-      }
-    }
-
     return config;
   },
   (error) => Promise.reject(error),
@@ -41,9 +27,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-
-      // Uncomment once authentication flow is implemented
-      // window.location.href = "/login";
+      window.location.href = "/login";
     }
 
     return Promise.reject(error);
