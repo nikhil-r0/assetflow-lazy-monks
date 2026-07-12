@@ -1,29 +1,36 @@
 # AssetFlow — Engineering & Agent Reference Guide
 
-> **Purpose of this document.** This is the single source of truth for every human and AI agent building **AssetFlow — Enterprise Asset & Resource Management System**. Read the relevant section before writing code. Do not invent conventions that contradict this doc; if something is missing, propose an addition here first, get agreement, then build.
+> **Purpose.** Fast orientation for humans and AI agents. **If anything here disagrees with `BUILD_SPEC.md`, `BUILD_SPEC.md` wins.** Do not invent conventions that contradict either doc; propose an addition to `BUILD_SPEC.md` first.
+
+### Document canon
+| Doc | Role |
+|---|---|
+| `BUILD_SPEC.md` | **Implementation authority** (stack, schema, RBAC, APIs, phases, tests, seed) |
+| **This file** | Winning thesis, 3 hard rules, DoD, demo script, coding conventions |
+| `AssetFlow_Hackathon_Plan.md` | 8-hour schedule + A/B/C/D ownership |
 
 ---
 
-## 0. TL;DR for agents (read this first)
+## 0. TL;DR for agents
 
-- **Stack:** Node 20 + Express 5 + TypeScript + Prisma + PostgreSQL (backend); React 19 + Vite + TS + Tailwind + shadcn/ui + TanStack Query (frontend).
-- **Architecture:** feature-sliced modules. **All business rules live in `services/`, never in controllers or React components.**
-- **The whole product hinges on 3 hard rules** (double-allocation block, booking-overlap reject, maintenance-approval gate). These MUST be correct and MUST have tests. Everything else is supporting cast.
-- **Roles are never self-assigned.** Signup creates an `EMPLOYEE`. Only Admin promotes.
-- **`main` is always runnable.** The demo runs off `main`.
-- **Definition of Done** for any task: types shared, rule enforced in service, role-gated, UI reflects state, no broken build, smoke-tested.
+- **Stack (pinned in BUILD_SPEC §0.1):** Node 20 + Express 4 + TypeScript + Prisma + PostgreSQL; React 18 + Vite + TanStack Query + Tailwind; Vitest + Supertest; npm workspaces (`backend/` + `frontend/`).
+- **Architecture:** feature-sliced modules under `backend/src/modules/{auth,assets,operations,insights}`. **Business rules live in `*.service.ts`, never in controllers or React components.**
+- **The product hinges on 3 hard rules** (double-allocation block, booking-overlap reject, maintenance-approval gate). These MUST be correct and MUST have tests.
+- **Roles are never self-assigned.** Signup creates `employee`. Only Admin promotes in Employee Directory.
+- **`main` is always runnable** (demo). Integration lands on `develop` first (see BUILD_SPEC §0.9).
+- **Definition of Done:** types shared, rule enforced in service, role-gated, UI reflects state, verify green, smoke-tested.
 
 ---
 
 ## 1. Product overview
 
-AssetFlow is an ERP platform for tracking, allocating, and maintaining physical assets and shared resources for any organization (offices, schools, hospitals, factories, agencies). It replaces spreadsheets/paper logs with structured asset lifecycles, centralized resource booking, maintenance approval workflows, and audit cycles — with real-time visibility into who holds what, where it is, and its condition.
+AssetFlow is an ERP for tracking, allocating, and maintaining physical assets and shared resources for any organization (offices, schools, hospitals, factories, agencies). It replaces spreadsheets/paper with structured lifecycles, booking, maintenance approval, and audit cycles — with real-time visibility into who holds what, where it is, and its condition.
 
-**Explicitly out of scope:** purchasing, invoicing, accounting. Acquisition cost is stored for ranking/reports only, never linked to financial modules.
+**Explicitly out of scope:** purchasing, invoicing, accounting; forgot-password email flows (seeded demo accounts); multipart uploads (URL strings only). Acquisition cost is for ranking/reports only.
 
-### The 10 screens (feature surface)
-1. Login / Signup (Employee-only signup)
-2. Dashboard / KPIs
+### The 10 screens
+1. Login / Signup (Employee-only signup — no role picker)
+2. Dashboard / KPIs (Available, Allocated, Maintenance Today, Active Bookings, Pending Transfers, Upcoming Returns + separate Overdue)
 3. Organization Setup (Admin) — Departments / Categories / Employee Directory
 4. Asset Registration & Directory
 5. Asset Allocation & Transfer
@@ -37,401 +44,259 @@ AssetFlow is an ERP platform for tracking, allocating, and maintaining physical 
 
 ## 2. The winning thesis
 
-Judges reward **correct domain logic + coherent role-based UX + a demo that never breaks** — not infra sophistication. Therefore:
+Judges reward **correct domain logic + believable role-based UX + a demo that never breaks** — not infra sophistication.
 
 > Build **fewer things, fully.** All 10 screens exist, but 4 hero flows (allocation/transfer, booking, maintenance, audit) must be flawless and demoed live. The 3 hard rules are the differentiators — most teams fake them; we make them real and *show the rejection happening*.
 
-**Do NOT build:** monorepo tooling, design-system package, microservices, mobile app, Kubernetes/complex Docker orchestration, refresh-token rotation, real email sending.
+**Do NOT build:** design-system packages, microservices, mobile app, Kubernetes, refresh-token rotation, real email sending, forgot-password.
 
 ---
 
-## 3. Tech stack (pinned)
+## 3. Tech stack (must match BUILD_SPEC §0.1)
 
-### Backend
-| Concern | Choice |
+| Layer | Choice |
 |---|---|
-| Runtime | Node 20 LTS |
-| Framework | Express 5 |
-| Language | TypeScript (strict) |
-| ORM | Prisma (`schema.prisma` = the ERD) |
-| Auth | `jsonwebtoken` (JWT) + `bcrypt` |
-| Validation | Zod (shared with frontend) |
-| Hardening | `cors`, `helmet`, `morgan` |
-| Tests | Jest + Supertest |
-| Dev runner | `tsx watch` or `nodemon` |
+| Backend | Node 20, Express ^4.19, TypeScript, Prisma, PostgreSQL 16 |
+| Auth | `jsonwebtoken` + `bcryptjs` |
+| Validation | zod |
+| Backend tests | Vitest + Supertest |
+| Frontend | React ^18 + Vite + react-router-dom + TanStack Query + Tailwind + axios |
+| Frontend tests | Vitest + Testing Library |
+| Monorepo | npm workspaces: `backend/`, `frontend/` |
+| API base | `/api/v1` |
 
-### Frontend
-| Concern | Choice |
-|---|---|
-| Framework | React 19 + Vite |
-| Language | TypeScript (strict) |
-| Styling | Tailwind CSS |
-| Components | shadcn/ui (Radix-based) |
-| Data fetching | TanStack Query |
-| Routing | React Router |
-| Forms | React Hook Form + Zod |
-| Charts | Recharts |
-| Calendar | FullCalendar |
-| HTTP | axios (with a 409 interceptor) |
-
-### Shared
-- A `shared/` folder holds Zod schemas + enums (roles, statuses) imported by BOTH frontend and backend. **One source of truth for the domain.**
+Optional UI helpers (not required by BUILD_SPEC): Recharts (reports), a calendar component for bookings. Prefer simple Tailwind components over inventing a design system.
 
 ---
 
-## 4. Repository structure
+## 4. Repository structure (BUILD_SPEC §0.4)
 
 ```
-assetflow/
-├── shared/                      # zod schemas + enums shared FE + BE
-│   ├── enums.ts                 # Role, AssetStatus, BookingStatus, ...
-│   └── schemas.ts               # zod request/response schemas
-├── server/
-│   ├── prisma/
-│   │   ├── schema.prisma        # THE ERD (13 tables)
-│   │   └── seed.ts              # 4 accounts + demo data
+assetflow-lazy-monks/
+├── docs/ER_DIAGRAM.dbml
+├── docs/API_CONTRACT.md
+├── backend/
+│   ├── prisma/schema.prisma      # THE ERD (16 tables) — track banners A/B/C/D
 │   └── src/
-│       ├── config/              # env, prisma client singleton
-│       ├── middleware/          # auth (verify JWT), requireRole, errorHandler
-│       ├── modules/             # feature-sliced ERP modules
-│       │   ├── auth/            # auth.routes.ts, auth.controller.ts, auth.service.ts
-│       │   ├── org/            # departments, categories, employees
-│       │   ├── assets/
-│       │   ├── allocations/     # allocate, transfer, return
-│       │   ├── bookings/
-│       │   ├── maintenance/
-│       │   ├── audits/
-│       │   └── notifications/
-│       ├── services/            # BUSINESS RULES: assetStateMachine, conflictChecks
-│       ├── lib/                 # activityLog(), notify(), errors, asyncHandler
-│       ├── app.ts               # express app + middleware wiring
-│       └── server.ts            # listen()
-└── web/
-    └── src/
-        ├── api/                 # axios client + TanStack hooks per module
-        ├── auth/                # AuthContext, ProtectedRoute, RoleGate
-        ├── components/          # KpiCard, StatusBadge, DataTable, ConflictDialog
-        ├── layouts/             # AppShell (role-aware sidebar)
-        ├── pages/               # one folder per screen (10 screens)
-        └── lib/                 # utils, formatters
+│       ├── shared/               # enums, errors, auth, activity, notify, pagination
+│       └── modules/
+│           ├── auth/             # Track A — auth, org, departments, categories, users
+│           ├── assets/           # Track B — assets, allocations, transfers
+│           ├── operations/       # Track C — bookings, maintenance
+│           └── insights/         # Track D — dashboard, audit, reports, notif, logs
+└── frontend/src/pages/{auth,org,assets,ops,insights}/
 ```
 
-**Module pattern (backend):** every module is `routes → controller → service`.
-- `routes` = URL + middleware (`requireRole`) + Zod validation.
-- `controller` = parse request, call service, shape response. **No business logic.**
-- `service` = all business rules, DB access, state transitions.
+**Module pattern:** `routes → service` (+ zod schema + tests). Controllers optional; **no business logic outside services.**
 
 ---
 
-## 5. Data model (ERD)
+## 5. Data model
 
-13 tables. This maps directly to `schema.prisma`.
+**16 tables** — full column specs in BUILD_SPEC §0.2. Quick map:
 
-| Table | Key fields |
+| Table | Purpose |
 |---|---|
-| **users** | id, name, email (unique), passwordHash, role, departmentId?, status |
-| **departments** | id, name, headUserId?, parentDepartmentId?, status |
-| **categories** | id, name, customFields (JSON, e.g. `{ warrantyMonths: true }`) |
-| **assets** | id, name, assetTag (auto `AF-0001`), serialNumber, categoryId, acquisitionDate, acquisitionCost, condition, location, status, isBookable, photoUrl?, currentHolderId? |
-| **allocations** | id, assetId, holderType (`USER`\|`DEPARTMENT`), holderId, allocatedBy, allocatedAt, expectedReturnDate?, returnedAt?, checkinNotes?, status (`ACTIVE`\|`RETURNED`) |
-| **transfer_requests** | id, assetId, fromHolderId?, toUserId, requestedBy, status (`REQUESTED`\|`APPROVED`\|`REJECTED`), approvedBy? |
-| **bookings** | id, assetId, bookedBy, startTime, endTime, status (`UPCOMING`\|`ONGOING`\|`COMPLETED`\|`CANCELLED`) |
-| **maintenance_requests** | id, assetId, raisedBy, issue, priority (`LOW`\|`MEDIUM`\|`HIGH`), status, approvedBy?, technician?, photoUrl? |
-| **audit_cycles** | id, name, scopeType (`DEPARTMENT`\|`LOCATION`), scopeId?, startDate, endDate, status (`OPEN`\|`CLOSED`) |
-| **audit_items** | id, cycleId, assetId, auditorId?, result (`PENDING`\|`VERIFIED`\|`MISSING`\|`DAMAGED`), notes? |
-| **notifications** | id, userId, type, message, read (bool), createdAt |
-| **activity_logs** | id, actorId, action, entityType, entityId, meta (JSON), createdAt |
+| users, departments, asset_categories, category_custom_fields | Org master data |
+| assets, asset_documents | Registry + docs (URL strings) |
+| allocations, transfer_requests | Who holds what + transfer workflow |
+| bookings | Time-slot resource booking |
+| maintenance_requests | Approval-gated repairs |
+| audit_cycles, audit_cycle_auditors, audit_items | Structured audit cycles |
+| notifications, activity_logs | Alerts + audit trail |
 
-> Relationships: a user belongs to a department; a department has a head (user) and optional parent; an asset belongs to a category and optionally has a current holder; allocations/bookings/maintenance/audit_items all reference an asset.
+Asset statuses: `Available | Allocated | Reserved | Under_Maintenance | Lost | Retired | Disposed` (UI label for Under_Maintenance = "Under Maintenance").
 
 ---
 
-## 6. Enums & state machines
+## 6. Enums & state machines (Prisma casing — BUILD_SPEC §0.2.16)
 
-Define these once in `shared/enums.ts` and mirror in `schema.prisma`.
-
-```ts
-export enum Role { ADMIN = 'ADMIN', ASSET_MANAGER = 'ASSET_MANAGER', DEPT_HEAD = 'DEPT_HEAD', EMPLOYEE = 'EMPLOYEE' }
-export enum AssetStatus { AVAILABLE='AVAILABLE', ALLOCATED='ALLOCATED', RESERVED='RESERVED', UNDER_MAINTENANCE='UNDER_MAINTENANCE', LOST='LOST', RETIRED='RETIRED', DISPOSED='DISPOSED' }
-export enum BookingStatus { UPCOMING='UPCOMING', ONGOING='ONGOING', COMPLETED='COMPLETED', CANCELLED='CANCELLED' }
-export enum MaintenanceStatus { PENDING='PENDING', APPROVED='APPROVED', REJECTED='REJECTED', ASSIGNED='ASSIGNED', IN_PROGRESS='IN_PROGRESS', RESOLVED='RESOLVED' }
-export enum TransferStatus { REQUESTED='REQUESTED', APPROVED='APPROVED', REJECTED='REJECTED' }
 ```
-
-### Asset lifecycle (enforced by `transitionAsset()`)
-```
-AVAILABLE ──allocate──────────► ALLOCATED ──return──────────► AVAILABLE
-AVAILABLE ──reserve(booking)──► RESERVED  ──slot ends───────► AVAILABLE
-AVAILABLE ◄──resolve── UNDER_MAINTENANCE ◄──approve maint.── AVAILABLE
-any ─────► LOST / RETIRED / DISPOSED   (audit close / admin action)
+Role:            admin | asset_manager | department_head | employee
+AssetStatus:     Available | Allocated | Reserved | Under_Maintenance | Lost | Retired | Disposed
+AllocStatus:     active | returned | overdue
+TransferStatus:  requested | approved | rejected | completed
+BookingStatus:   upcoming | ongoing | completed | cancelled
+MaintStatus:     pending | approved | rejected | technician_assigned | in_progress | resolved
+Priority:        low | medium | high | critical
+AuditStatus:     open | closed
+AuditResult:     verified | missing | damaged
 ```
 
-**Legal transitions only.** `transitionAsset(assetId, newStatus)` is the ONLY function permitted to write `asset.status`. It validates the transition is legal or throws `409`. No controller or other service writes `status` directly.
-
-### Maintenance workflow
+### Asset lifecycle (via central `transitionStatus` only)
 ```
-PENDING ─► APPROVED ─► ASSIGNED ─► IN_PROGRESS ─► RESOLVED
-   └────► REJECTED
-```
-- On `APPROVED`: `transitionAsset(asset, UNDER_MAINTENANCE)`.
-- On `RESOLVED`: `transitionAsset(asset, AVAILABLE)`.
-
-### Transfer workflow
-```
-REQUESTED ─► APPROVED ─► (re-allocate: old allocation RETURNED, new allocation ACTIVE)
-    └─────► REJECTED
+Available ──allocate──────────► Allocated ──return──────────► Available
+Available ──book (bookable)───► Reserved  ──last booking ends► Available
+Available/Allocated ──approve maint──► Under_Maintenance ──resolve──► Available
+any (rules in BUILD_SPEC) ────► Lost / Retired / Disposed
 ```
 
-### Booking lifecycle
-```
-UPCOMING ─► ONGOING ─► COMPLETED
-    └─────► CANCELLED
-```
-(Status can be derived from `startTime`/`endTime`/now, or advanced by a lightweight cron/on-read computation. Keep it simple: compute on read.)
+### Maintenance
+`pending → approved → technician_assigned → in_progress → resolved` (or `pending → rejected`).  
+On **approved**: asset → `Under_Maintenance`. On **resolved**: asset → `Available`.
+
+### Transfer
+`requested → approved → completed` (re-allocate atomically) or `requested → rejected`.
+
+### Booking
+Status derived/refreshed from time; overlap uses half-open `[start, end)`.
 
 ---
 
 ## 7. The 3 hard rules (MUST be correct + tested)
 
 ### Rule 1 — No double allocation
-In `allocations/allocation.service.ts`, before creating an allocation:
-```ts
-if (asset.status === AssetStatus.ALLOCATED) {
-  throw new ConflictError(409, {
-    code: 'ASSET_ALREADY_HELD',
-    heldBy: asset.currentHolder.name,
-    assetTag: asset.assetTag,
-    action: 'TRANSFER_REQUIRED',
-  });
-}
-```
-Frontend axios interceptor catches `409 ASSET_ALREADY_HELD` → opens `ConflictDialog` showing "Currently held by {heldBy}" + a **Request Transfer** button that POSTs a transfer request.
+Before creating an allocation: if an `active` row exists for that `asset_id` → **409 CONFLICT** with holder name + `already_allocated`. UI opens conflict banner + **Request Transfer**.
 
-### Rule 2 — Booking overlap (half-open interval `[start, end)`)
-```ts
-const clash = await prisma.booking.findFirst({
-  where: {
-    assetId,
-    status: { not: BookingStatus.CANCELLED },
-    startTime: { lt: newEnd },   // existing starts before new ends
-    endTime:   { gt: newStart }, // existing ends after new starts
-  },
-});
-if (clash) throw new ConflictError(409, { code: 'BOOKING_OVERLAP', message: 'Time slot overlaps an existing booking' });
-```
-Test cases that MUST pass:
-- Existing 09:00–10:00, request 09:30–10:30 → **REJECTED**
-- Existing 09:00–10:00, request 10:00–11:00 → **ACCEPTED** (adjacent, half-open)
+### Rule 2 — Booking overlap (half-open `[start, end)`)
+Existing 09:00–10:00 + request 09:30–10:30 → **REJECTED**.  
+Existing 09:00–10:00 + request 10:00–11:00 → **ACCEPTED**.
 
 ### Rule 3 — Maintenance approval gate
-An asset may enter `UNDER_MAINTENANCE` **only** as a side effect of approving a maintenance request. Never via a direct status edit. Enforced because `transitionAsset` is the only writer and it's called inside `approveMaintenance()`.
+Asset enters `Under_Maintenance` **only** as a side effect of approving a maintenance request — never via casual status edit from the holder.
 
-**Required tests (Jest + Supertest):**
-1. Double allocation → `409` with `heldBy` populated.
-2. Overlap rejected; adjacent slot accepted.
-3. Asset flips to `UNDER_MAINTENANCE` only after approval; a direct attempt is impossible/blocked.
-4. `requireRole` blocks wrong-role access (e.g. Employee hitting an Asset-Manager route → `403`).
+**Required tests (Vitest + Supertest):** double-alloc 409; overlap reject / adjacent accept; Under_Maintenance only after approve; wrong role → 403.
 
 ---
 
 ## 8. Roles & permissions
 
-Signup payload **never** contains a role — the server forces `EMPLOYEE`. Only Admin promotes in the Employee Directory.
+Matches BUILD_SPEC §0.8 and the product brief:
 
 | Action | Admin | Asset Mgr | Dept Head | Employee |
 |---|:--:|:--:|:--:|:--:|
-| Org setup (depts/categories/employees) | ✅ | | | |
-| Promote roles | ✅ | | | |
-| Register assets | ✅ | ✅ | | |
-| Allocate assets | ✅ | ✅ | | |
-| Approve transfers | ✅ | ✅ | dept-scoped | |
-| Approve maintenance | ✅ | ✅ | | |
-| Approve returns / condition notes | ✅ | ✅ | | |
-| Create audit cycle | ✅ | | | |
-| Be an auditor (if assigned) | ✅ | ✅ | ✅ | ✅ |
-| Book resources | ✅ | ✅ | ✅ (for dept) | ✅ |
-| Raise maintenance | ✅ | ✅ | ✅ | ✅ |
-| Initiate return/transfer request | ✅ | ✅ | ✅ | ✅ |
-| View org analytics | ✅ | partial | dept-scoped | |
+| Org setup + promote roles | ✅ | | | |
+| Register / allocate assets | ✅ | ✅ | | |
+| Approve transfers (dept-scoped for head) | ✅ | ✅ | ✅ | |
+| Approve returns / check-in | ✅ | ✅ | | |
+| Create audit cycle + assign auditors | ✅ | | | |
+| Close cycle / discrepancy resolution | ✅ | ✅ | | |
+| Book / raise maintenance / request transfer | ✅ | ✅ | ✅ | ✅ |
+| View analytics | org | org | dept | self |
 
-**Enforcement is double-layered:** `requireRole(...roles)` middleware on the backend AND `RoleGate`/conditional rendering on the frontend. Backend is the source of truth; UI gating is UX sugar.
+**Enforcement:** `requireRole` on backend + route/UI gating. Backend is source of truth.
 
 ---
 
-## 9. API conventions
+## 9. API conventions (BUILD_SPEC §0.3)
 
-- **Base path:** `/api`. Resource-oriented: `/api/assets`, `/api/allocations`, `/api/bookings`, etc.
-- **Auth:** `Authorization: Bearer <jwt>`. JWT payload: `{ sub: userId, role, departmentId }`.
-- **Validation:** every write endpoint validates the body with a Zod schema from `shared/`.
-- **Success shape:** return the resource or `{ data, meta }` for lists. Keep it consistent.
-- **Error shape (uniform):**
-```json
-{ "error": { "code": "ASSET_ALREADY_HELD", "message": "…", "details": { } } }
-```
-- **Status codes:** `200/201` success, `400` validation, `401` unauthenticated, `403` wrong role, `404` not found, `409` conflict (the 3 hard rules), `500` unexpected.
-- **Central error handler** in `middleware/errorHandler.ts` translates thrown `AppError`/`ConflictError` into the uniform shape. Controllers use an `asyncHandler` wrapper so no raw try/catch clutter.
-- **Every state-changing action** calls `activityLog(actor, action, entity, meta)` and, where a user should be informed, `notify(userId, type, message)`.
+- Base: `/api/v1`
+- Auth: `Authorization: Bearer <jwt>` — payload `{ sub, role, department_id, iat, exp }`, 8h
+- Errors: `{ "error": { "code", "message", "details?" } }`
+- Conflicts that win demos: **409** double-allocation; **422 OVERLAP** booking clash
+- Every state-changing action: `logActivity` + `createNotification` where a user should know
 
 ---
 
 ## 10. Coding conventions
 
-**General**
-- TypeScript strict everywhere. No `any` unless justified with a comment.
-- Shared enums/schemas imported from `shared/` — never redefine statuses inline.
-- Names: `camelCase` vars/functions, `PascalCase` types/components, `SCREAMING_SNAKE` enum values.
-- No business logic in controllers or React components. Services (BE) / hooks + api layer (FE).
-- Comments only for non-obvious intent, not narration.
-
-**Backend**
-- One Prisma client singleton (`config/prisma.ts`). Never `new PrismaClient()` per request.
-- `transitionAsset()` is the only writer of `asset.status`.
-- Conflict checks live in `services/`, reused by controllers — not copy-pasted.
-
-**Frontend**
-- Server state via TanStack Query; local UI state via `useState`. Do not duplicate server state in Zustand/global unless needed.
-- All API calls go through `api/` hooks; components never call axios directly.
-- `StatusBadge` renders every status with a consistent color map. `ConflictDialog` handles all `409` UX.
-- Role-gate actions with `RoleGate`; never show a button the user can't use.
+- TypeScript strict. No `any` without a comment.
+- Shared enums/labels from `backend/src/shared/enums.ts` (and mirrored constants for FE).
+- `transitionStatus()` is the **only** writer of `asset.status`.
+- FE: TanStack Query for server state; axios only via `api/client.ts`; StatusBadge + conflict UX for 409s.
+- Never show a button the user's role cannot use.
 
 ---
 
-## 11. Git workflow
+## 11. Git workflow (BUILD_SPEC §0.9)
 
-- **`main` is always runnable.** The demo runs off `main`. Never merge a broken build.
-- **Feature branches per task:** `feat/allocation-conflict`, `feat/booking-calendar`, `fix/overdue-flag`, `chore/seed-data`, `test/booking-overlap`.
-- **Small PRs, fast reviews** (~15 min turnaround). No branch lives more than a few hours.
-- **Conventional commits:** `feat:`, `fix:`, `refactor:`, `chore:`, `test:`, `docs:`.
-- **Freeze the contract early:** agree `shared/` enums + API response shapes in the first 30 minutes and don't churn them. Most merge pain is people inventing different field names.
-- Whoever changes `schema.prisma`: migrate → **announce in team channel** → everyone pulls + re-seeds.
+```
+main  ← fast-forward from develop at 2h checkpoints (tags v1..v4)
+ └─ develop  ← feature branches merge here hourly
+     ├─ feature/auth-orgsetup        (A)
+     ├─ feature/assets-allocation    (B)
+     ├─ feature/booking-maintenance  (C)
+     └─ feature/audit-reports        (D)
+```
+
+Conventional commits: `feat(assets): …`. Run `npm run verify` before merging to `develop`.
 
 ---
 
-## 12. Dev workflow (local loop)
+## 12. Dev workflow
 
-1. Postgres running (local install or `docker-compose up -d`).
-2. `server/`: copy `.env.example` → `.env` (`DATABASE_URL`, `JWT_SECRET`), then `npx prisma migrate dev` → `npm run dev` (`:4000`).
-3. `web/`: `npm run dev` (Vite `:5173`, proxy `/api` → `:4000`).
-4. **Shared seed:** `npx prisma db seed` creates the 4 demo accounts + demo data so everyone develops against identical state. Reset anytime with `npx prisma migrate reset`.
-5. Backend ships an endpoint → the owning frontend dev wires it the **same session**. Don't let API and UI drift.
+1. `docker compose up -d` (Postgres 16)
+2. `backend/`: `.env` from `.env.example` → `npx prisma migrate dev` → `npm run dev` (`:4000`)
+3. `frontend/`: `npm run dev` (`:5173`, proxy `/api` → backend)
+4. Seed: `npx prisma db seed` — credentials in BUILD_SPEC §4.3 (`Passw0rd!`)
 
-**Seed accounts (all password `demo1234`):**
 | Email | Role |
 |---|---|
-| `admin@assetflow.dev` | ADMIN |
-| `manager@assetflow.dev` | ASSET_MANAGER |
-| `depthead@assetflow.dev` | DEPT_HEAD |
-| `employee@assetflow.dev` | EMPLOYEE |
-
-Seed should also create: 2–3 departments, 3–4 categories, ~10 assets across statuses (incl. one already allocated for the conflict demo, one overdue, one bookable room), a couple of bookings, one maintenance request, and one audit cycle.
-
----
-
-## 13. Test workflow (focused, not exhaustive)
-
-- **Jest + Supertest** on the backend, targeting only what wins points: the 3 hard rules + `requireRole`. (See §7.)
-- Run `npm test` before merging anything that touches `services/` or `middleware/`.
-- **Skip frontend unit tests.** Real test = manual click-through per role. Keep this checklist green:
-  - [ ] Employee cannot see/reach admin routes (UI hidden + API `403`)
-  - [ ] No role dropdown at signup; new users are EMPLOYEE
-  - [ ] Allocation block dialog appears with correct holder name
-  - [ ] Transfer request → approve → history updates
-  - [ ] Booking overlap rejected; adjacent slot accepted
-  - [ ] Maintenance approve → asset flips to UNDER_MAINTENANCE → resolve → AVAILABLE
-  - [ ] Overdue return shows on dashboard + notifications
-  - [ ] Audit: mark Missing → discrepancy report → close cycle → asset LOST
+| admin@assetflow.dev | admin |
+| manager@assetflow.dev | asset_manager |
+| head@assetflow.dev | department_head |
+| priya@assetflow.dev | employee |
+| raj@assetflow.dev | employee |
 
 ---
 
-## 14. Integration rhythm
+## 13. Test focus
 
-- **Every ~6 hours: full-flow smoke test on `main`** — run the demo script (§16) start to finish. Catches broken wiring early instead of at hour 47.
-- Keep a running `#status` note: what's merged, what's in flight, what's blocked.
-- Re-seed before each smoke test for clean, predictable state.
+Vitest + Supertest on the 3 hard rules + RBAC. Manual click-through checklist:
+
+- [ ] No role dropdown at signup; new users are `employee`
+- [ ] Employee cannot reach admin routes (UI + API 403)
+- [ ] Allocation block shows correct holder + Transfer CTA
+- [ ] Transfer approve → history updates
+- [ ] Booking overlap rejected; adjacent accepted
+- [ ] Maintenance approve → Under Maintenance → resolve → Available
+- [ ] Overdue return on dashboard + notification
+- [ ] Audit Missing → discrepancy report → close → Lost
 
 ---
 
-## 15. Build order (dependency-correct)
+## 14. Team split (BUILD_SPEC tracks)
 
-Build in this order so nothing is blocked:
-1. Auth + roles + AppShell (login, JWT, role-aware sidebar, 4 seeded accounts)
-2. Org setup (departments → categories → employee directory + promote)
-3. Asset registration + directory (auto tag, search/filter, status badges, per-asset history)
-4. Allocation + transfer + return (**Rule 1**) ← hero flow
-5. Booking (calendar + **Rule 2**) ← hero flow
-6. Maintenance (**Rule 3**, workflow) ← hero flow
-7. Audit cycles (create → assign → verify → discrepancy report → close) ← hero flow
-8. Dashboard KPIs (now real) + Notifications/Activity log
-9. Reports/Analytics (charts)
-10. Polish, seed, demo script, tests
-
-Screens 8–9 are last because they aggregate everything else.
-
-### Team-of-4 split
-| Dev | Owns | First 2 hours (unblock everyone) |
+| Track | Owns | Screens |
 |---|---|---|
-| **Dev 1 — Domain/Backend lead** | `schema.prisma`, `services/` (state machine + conflict rules), Jest tests | Ship the Prisma schema + migrate FAST — team is blocked until this lands |
-| **Dev 2 — Backend API** | auth + JWT + `requireRole`, module routes/controllers, `seed.ts`, notifications + activity log | Build auth + middleware skeleton |
-| **Dev 3 — Frontend core** | AppShell, AuthContext, ProtectedRoute/RoleGate, shared components, axios client + 409 interceptor | Build shell + login + shared components |
-| **Dev 4 — Frontend screens** | Wire the 10 pages via TanStack hooks, forms, calendar, charts | Build Org Setup + Asset Directory first |
+| **A — Auth/Org** | Auth, RBAC, Org Setup | 1, 3 |
+| **B — Assets** | Registry, Allocation, Transfer, Overdue | 4, 5 |
+| **C — Operations** | Booking, Maintenance | 6, 7 |
+| **D — Insights** | Dashboard, Audit, Reports, Notif/Logs | 2, 8, 9, 10 |
 
-**Critical path (whole team blocks — do first):** Dev 1 schema (h~2) → Dev 2 auth + requireRole (h~3) → Dev 3 AppShell + login + DataTable + ConflictDialog (h~4).
-
----
-
-## 16. Demo script (rehearse 3×)
-
-A story, not a feature tour:
-1. **Admin (Kabir)** logs in → creates dept "Engineering", category "Electronics" (warranty field), promotes Priya→Asset Manager, Raj→Dept Head. *"Notice: nobody picked their own role."*
-2. **Asset Manager Priya** registers a laptop → auto tag `AF-0114`, status `AVAILABLE`.
-3. Priya allocates `AF-0114` to employee **Anita**, return date in the past → dashboard **overdue** flag lights up.
-4. **Money shot:** Raj tries to allocate `AF-0114` → **blocked**, "held by Anita," Transfer button → Raj requests transfer → Priya approves → history auto-updates. *(Rule 1)*
-5. **Booking:** book Room B2 09:00–10:00, try 09:30–10:30 → **rejected**; try 10:00–11:00 → **accepted**. *(Rule 2)*
-6. **Maintenance:** Anita raises a request → asset stays `AVAILABLE` → Priya approves → asset **auto-flips to UNDER_MAINTENANCE** → resolve → back to `AVAILABLE`. *(Rule 3)*
-7. **Audit:** Admin opens a cycle, assigns auditor, marks an asset `MISSING` → **auto discrepancy report** → close cycle → asset becomes `LOST`.
-8. **End on the Dashboard:** KPIs, overdue, notifications feed — *"every action you saw is reflected here in real time and logged in the activity trail."*
-9. Flash **passing tests** for 5 seconds: *"the conflict rules are unit-tested."*
+Critical path: A schema+auth → B `transitionStatus` → C maintenance status flips / D audit close.
 
 ---
 
-## 17. Demo-hardening (last ~5 hours)
+## 15. Demo script (rehearse 3×)
 
-- **Freeze features.** Only bug fixes to `main`.
-- `npx prisma migrate reset && npx prisma db seed` → pristine demo data.
-- One owner runs the 5-minute script 3× and **screen-records one clean take** as backup if live fails.
-- Prep fallback: have API docs / Postman collection and passing tests ready if the UI hiccups.
+1. **Admin** → Org Setup: dept, Electronics + warranty field, promote manager/head. *"Nobody picked their own role."*
+2. **Asset Manager** registers laptop → `AF-0xxx` Available.
+3. Allocate to Priya with past return date → Dashboard **overdue**.
+4. **Money shot:** allocate same asset to Raj → **blocked**, held by Priya → Transfer → approve → history updates. *(Rule 1)*
+5. **Booking:** Room B2 09:00–10:00; try 09:30–10:30 → reject; 10:00–11:00 → accept. *(Rule 2)*
+6. **Maintenance:** raise → still Available until approve → **Under Maintenance** → resolve → Available. *(Rule 3)*
+7. **Audit:** mark Missing → discrepancy report → close → **Lost**.
+8. End on **Dashboard + Notifications + Activity log**. Flash passing hard-rule tests.
 
----
-
-## 18. Scope cuts (decide early, protect the hero flows)
-
-Cut in this order if behind:
-1. Reports charts → 2 simple summary cards
-2. Photo/document upload → URL text field
-3. QR scan → QR display only, search by tag
-4. Parent-department hierarchy → flat departments
-5. Reschedule booking → cancel + rebook
-6. Refresh-token rotation → single access token
-
-**Never cut:** the 3 hard rules, role gating, seed data, demo rehearsal.
+Full walkthrough with seed data: BUILD_SPEC §4.4.
 
 ---
 
-## 19. Definition of Done (per task)
+## 16. Scope cuts (if behind — protect hero flows)
 
-A task is done only when ALL are true:
-- [ ] Types/enums come from `shared/`, not redefined
-- [ ] Business rule (if any) is enforced in a `service`, not a controller/component
-- [ ] Endpoint is role-gated with `requireRole` (backend) + `RoleGate` (frontend)
-- [ ] Request body validated with Zod
-- [ ] State changes go through `transitionAsset()` where asset status is involved
-- [ ] Action is logged (`activityLog`) and notifies affected users where relevant
-- [ ] UI reflects the resulting state (status badge, list refresh via query invalidation)
-- [ ] `main` still builds and runs; smoke path unbroken
-- [ ] If it touches a hard rule → a Jest test covers it
+1. Reports charts → summary tables  
+2. Photo/docs → URL text field (already the default)  
+3. QR scan → display + search by tag  
+4. Parent-department hierarchy → flat depts  
+5. Reschedule → cancel + rebook  
+6. Forgot password → never planned  
+
+**Never cut:** 3 hard rules, role gating, seed data, demo rehearsal.
 
 ---
 
-## 20. Quick reference — one-line summary
+## 17. Definition of Done (per task)
 
-Admin sets up org + roles → Asset Manager registers & allocates assets (conflicts blocked, transfers required) → employees book/maintain/return (overlaps rejected, maintenance approval-gated) → audits verify and flag discrepancies → dashboard, notifications, and activity logs keep every role informed in real time. Built as feature-sliced Express+Prisma modules with all rules in `services/`, a React+shadcn role-aware frontend, guarded by Jest tests on the 3 hard rules, integrated continuously on an always-runnable `main`.
+- [ ] Matches BUILD_SPEC phase acceptance criteria
+- [ ] Business rule in service; endpoint `requireRole`-gated
+- [ ] Zod-validated body; asset status via `transitionStatus` when relevant
+- [ ] `logActivity` / `createNotification` where specified
+- [ ] UI reflects state; `develop` still verifies
+- [ ] Hard-rule change → Vitest coverage
+
+---
+
+## 18. One-line summary
+
+Admin sets up org + roles → Asset Manager registers & allocates (conflicts blocked, transfers required) → employees book/maintain/return (overlaps rejected, maintenance approval-gated) → audits verify discrepancies → dashboard, notifications, and logs keep every role informed. Built as Express+Prisma feature modules with rules in services, React role-aware UI, Vitest on the 3 hard rules, integrated on `develop`, demoed from always-runnable `main`.
