@@ -10,25 +10,41 @@ import {
   overlapError,
 } from "./overlap.js";
 
+/**
+ * Lock the asset row so concurrent booking creates cannot both pass the overlap
+ * check. Locking bookings alone is insufficient when no rows exist yet.
+ */
+export async function lockAssetForUpdate(
+  tx: { $queryRaw: typeof prisma.$queryRaw },
+  assetId: number,
+): Promise<{ id: number; is_bookable: boolean }> {
+  const rows = await tx.$queryRaw<Array<{ id: number; is_bookable: boolean }>>`
+    SELECT id, is_bookable
+    FROM assets
+    WHERE id = ${assetId}
+    FOR UPDATE
+  `;
+  const row = rows[0];
+  if (!row) {
+    throw new NotFoundError("Asset not found");
+  }
+  return row;
+}
+
 export const bookingService = {
   async create(input: CreateBookingInput, actorId: number) {
     const start = new Date(input.start_time);
     const end = new Date(input.end_time);
     assertValidBookingRange(start, end);
 
-    const asset = await prisma.assets.findUnique({
-      where: { id: input.resource_asset_id },
-    });
-    if (!asset) {
-      throw new NotFoundError("Asset not found");
-    }
-    if (!asset.is_bookable) {
-      throw new AppError("UNPROCESSABLE", 422, "Asset is not bookable", [
-        { field: "resource_asset_id", issue: "not_bookable" },
-      ]);
-    }
+    const booking = await prisma.$transaction(async (tx) => {
+      const asset = await lockAssetForUpdate(tx, input.resource_asset_id);
+      if (!asset.is_bookable) {
+        throw new AppError("UNPROCESSABLE", 422, "Asset is not bookable", [
+          { field: "resource_asset_id", issue: "not_bookable" },
+        ]);
+      }
 
-    return prisma.$transaction(async (tx) => {
       const existing = await tx.bookings.findMany({
         where: {
           resource_asset_id: input.resource_asset_id,
@@ -52,7 +68,7 @@ export const bookingService = {
         throw overlapError(clash.id);
       }
 
-      const booking = await tx.bookings.create({
+      return tx.bookings.create({
         data: {
           resource_asset_id: input.resource_asset_id,
           booked_by_user_id: actorId,
@@ -62,22 +78,23 @@ export const bookingService = {
           status: BookingStatus.upcoming,
         },
       });
-
-      await createNotification(
-        actorId,
-        NOTIF.BOOKING_CONFIRMED,
-        `Booking confirmed for asset #${input.resource_asset_id}`,
-        "booking",
-        booking.id,
-      );
-      await logActivity(actorId, ACT.CREATE_BOOKING, "booking", booking.id, {
-        resource_asset_id: input.resource_asset_id,
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-      });
-
-      return booking;
     });
+
+    // Side effects after commit so notify/log never hold the row lock
+    await createNotification(
+      actorId,
+      NOTIF.BOOKING_CONFIRMED,
+      `Booking confirmed for asset #${input.resource_asset_id}`,
+      "booking",
+      booking.id,
+    );
+    await logActivity(actorId, ACT.CREATE_BOOKING, "booking", booking.id, {
+      resource_asset_id: input.resource_asset_id,
+      start_time: start.toISOString(),
+      end_time: end.toISOString(),
+    });
+
+    return booking;
   },
 
   async list(query: ListBookingsQuery) {
