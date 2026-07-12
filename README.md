@@ -52,6 +52,7 @@ cp backend/.env.example backend/.env
 cd backend
 npx prisma migrate deploy
 npx prisma generate
+npm run seed                 # demo data (idempotent — safe to re-run)
 ```
 
 `backend/.env` should look like:
@@ -89,8 +90,21 @@ git pull origin develop
 npm install                  # if package-lock changed
 docker compose up -d         # if DB was stopped
 cd backend && npx prisma migrate deploy && npx prisma generate
+npm run seed                 # if you want/need demo rows again (skips existing)
 # then start backend + frontend as above
 ```
+
+### Seed demo data
+
+Idempotent seed (skip/upsert — does **not** wipe tables):
+
+```bash
+cd backend
+npm run seed
+# or: npx prisma db seed
+```
+
+Creates departments, roles, categories, assets (`AF-0001`, `AF-0002`, `AF-ROOM1`), allocation/transfer/booking/maintenance/audit rows, plus notifications and activity logs.
 
 ### Common footguns
 
@@ -107,6 +121,14 @@ cd backend && npx prisma migrate deploy && npx prisma generate
 cd backend && npm test
 ```
 
-## Seed accounts (once seed lands)
+## Seed accounts
 
-See `BUILD_SPEC.md` §4.3 — password `Passw0rd!`.
+Password for all demo users: **`Passw0rd!`**
+
+| Email | Role |
+|---|---|
+| `admin@assetflow.dev` | admin |
+| `manager@assetflow.dev` | asset_manager |
+| `head@assetflow.dev` | department_head |
+| `employee@assetflow.dev` (Priya) | employee |
+| `sales@assetflow.dev` (Raj) | employee |
