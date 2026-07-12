@@ -21,9 +21,18 @@ let head1: { id: number; role: string };
 let adminUser: { id: number; role: string };
 
 beforeAll(async () => {
-  // Wipe only the tables this suite touches, in dependency order
+  // Wipe dependent rows first (shared local DB may hold QA/booking/maint data)
   await prisma.notifications.deleteMany();
   await prisma.activity_logs.deleteMany();
+  await prisma.audit_items.deleteMany().catch(() => undefined);
+  await prisma.audit_cycle_auditors.deleteMany().catch(() => undefined);
+  await prisma.audit_cycles.deleteMany().catch(() => undefined);
+  await prisma.bookings.deleteMany();
+  await prisma.maintenance_requests.deleteMany();
+  await prisma.transfer_requests.deleteMany().catch(() => undefined);
+  await prisma.allocations.deleteMany().catch(() => undefined);
+  await prisma.asset_documents.deleteMany().catch(() => undefined);
+  await prisma.assets.deleteMany().catch(() => undefined);
   await prisma.users.deleteMany();
   await prisma.departments.deleteMany();
 
@@ -71,9 +80,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Clean up seed data
+  // Clean up seed data (and rows that reference those users)
   await prisma.notifications.deleteMany();
   await prisma.activity_logs.deleteMany();
+  await prisma.bookings.deleteMany();
+  await prisma.maintenance_requests.deleteMany();
   await prisma.users.deleteMany({ where: { email: { endsWith: "@assetflow.dev" } } });
   await prisma.departments.deleteMany({ where: { name: { startsWith: "Phase1-" } } });
   await prisma.$disconnect();
