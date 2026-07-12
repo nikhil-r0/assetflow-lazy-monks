@@ -1,31 +1,31 @@
 # Track B — Assets module
 
-**Owner:** Track B (feature branch `feature/assets-allocation`)  
-**Screens:** 4 (Asset Registration & Directory), 5 (Allocation & Transfer)
+**Owner:** Track B · Branch pattern: `feature/assets-*`  
+**Screens:** 4 (Registry), 5 (Allocation & Transfer)
 
-## Status (early scaffold)
+## Status
 
 | Piece | Status |
 |---|---|
-| Module mount `GET /api/v1/assets/ping` | ✅ |
-| Zod placeholders (`createAsset`, `allocate`) | ✅ |
-| Service stubs (NotImplemented) | ✅ |
-| Pure `transitionStatusPure` / `canTransition` | ✅ (ready for C/D) |
-| `buildAlreadyAllocatedConflict` 409 shape | ✅ |
-| Prisma CRUD / allocate / transfer | ⏳ blocked on Track A auth + categories |
+| `GET /api/v1/assets/ping` | ✅ |
+| `transitionStatusPure` / `canTransition` | ✅ |
+| `formatAssetTag` / `placeholderAssetTag` | ✅ |
+| `validateCustomFields` | ✅ |
+| 409 `buildAlreadyAllocatedConflict` | ✅ |
+| FE shells Registry / AssetForm / Allocation | ✅ |
+| Prisma client generate | ⏳ Track A Prisma 7 datasource fix |
+| CRUD / allocate APIs | ⏳ Track A auth + categories |
 
-## Endpoints (planned)
+## Tests
 
-See `BUILD_SPEC.md` Track B Phases 1–5. Do not invent routes outside that list.
+```bash
+cd backend && npm test
+```
 
-## Hard rule owned here
-
-**Rule 1 — No double allocation:** at most one `allocations` row with `status=active` per asset. Conflict response must include `holder_name` for the Transfer CTA.
-
-## Frozen export for other tracks
+## Frozen export for C/D
 
 ```ts
 import { assetService } from "./assets.service.js";
-// C/D call: assetService.transitionStatus(assetId, to, actorId, reason?)
-// Until DB wrapper lands, import transitionStatusPure from assetStatus.ts for unit tests.
+// assetService.transitionStatus(assetId, to, actorId, reason?)
+// Until DB: assetService.transitionStatusPure(from, to)
 ```
